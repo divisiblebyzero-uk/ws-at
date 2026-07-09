@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as Tone from 'tone'; // Correct import path for the Tone audio instance
 import { generateQuestion, type GeneratedQuestion } from '../utils/generator';
 import { playCadenceProgression, playChord, stopAllAudio } from '../utils/audioPlayer';
 
@@ -15,14 +16,14 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
   const [score, setScore] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
 
-  // Syllabus and difficulty toggle switches
-  const [isLegacySyllabus, setIsLegacySyllabus] = useState<boolean>(false);
-  const [isEasyMode, setIsEasyMode] = useState<boolean>(false);
+  // Syllabus Configuration Settings
+  const [isLegacySyllabus, setIsLegacySyllabus] = useState<boolean>(false); // True = 2025-2026 mode (No inversions checked)
+  const [isEasyMode, setIsEasyMode] = useState<boolean>(false); // True = Restricts playback strictly to root position
 
-  // Generate question when component loads or when Easy Mode changes
+  // Load a random question sequence immediately when entering the view
   useEffect(() => {
     handleNextQuestion();
-    return () => stopAllAudio();
+    return () => stopAllAudio(); // Safety clean-up if user leaves mid-playback
   }, [isEasyMode]);
 
   const handleNextQuestion = () => {
@@ -35,18 +36,22 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
     setFeedback(null);
   };
 
-  const handlePlayFullProgression = () => {
+  const handlePlayFullProgression = async () => {
     if (!question) return;
+    // Crucial for Mobile: Wakes up the mobile device audio engine on user interaction
+    await Tone.start(); 
     playCadenceProgression(question.keyChordMidi, question.progressionMidi);
   };
 
-  const handlePlayKeyChordOnly = () => {
+  const handlePlayKeyChordOnly = async () => {
     if (!question) return;
+    await Tone.start();
     playChord(question.keyChordMidi, '1n');
   };
 
-  const handlePlayIndividualChord = (index: number) => {
+  const handlePlayIndividualChord = async (index: number) => {
     if (!question) return;
+    await Tone.start();
     playChord(question.progressionMidi[index], '1n');
   };
 
@@ -59,32 +64,21 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
   const handleCheckAnswer = () => {
     if (!question) return;
 
-    // 1. Check Cadence Name
+    // Check Part 1: Cadence Name Identification
     const cadenceIsCorrect = selectedCadence.toLowerCase() === question.cadenceType.toLowerCase();
 
-    // 2. Check Progression based on selected ABRSM Syllabus settings
-    let chordsAreCorrect = false;
-    if (isLegacySyllabus) {
-      // 2025-2026: Compare with simplified base chords (no inversions allowed)
-      chordsAreCorrect = selectedChords.every((chord: string, idx: number) => 
-        chord === question.simplifiedSymbols[idx]
-      );
-    } else {
-      // 2027-2028: Compare with exact structural inversions
-      chordsAreCorrect = selectedChords.every((chord: string, idx: number) => 
-        chord === (isEasyMode ? question.simplifiedSymbols[idx] : question.chordSymbols[idx])
-      );
-    }
+    // Check Part 2: Chord Tracking (Switches target array evaluation depending on Syllabus setting)
+    const targetSolutionSymbols = isLegacySyllabus ? question.simplifiedSymbols : question.chordSymbols;
+    const chordsAreCorrect = selectedChords.every((chord, idx) => chord === targetSolutionSymbols[idx]);
 
     const isFullyCorrect = cadenceIsCorrect && chordsAreCorrect;
 
     if (isFullyCorrect) {
       setScore(prev => prev + 1);
-      setFeedback({ isCorrect: true, message: 'Excellent! Perfect tracking of the chord progression.' });
+      setFeedback({ isCorrect: true, message: 'Excellent! Perfect tracking of both the cadence and chord forms.' });
     } else {
-      const correctAnswers = isLegacySyllabus || isEasyMode ? question.simplifiedSymbols : question.chordSymbols;
       let msg = `Incorrect. The correct cadence was ${question.cadenceType}. `;
-      msg += `The progression was: ${correctAnswers.join(' — ')}.`;
+      msg += `The progression was: ${targetSolutionSymbols.join(' — ')}.`;
       setFeedback({ isCorrect: false, message: msg });
     }
 
@@ -96,10 +90,10 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
 
   const cadenceOptions = ['Perfect', 'Imperfect', 'Plagal', 'Interrupted'];
   
-  // Conditionally populate dropdown lists to match active exam frameworks
-  const legacyChords = ['I', 'II', 'IV', 'V', 'V7', 'VI'];
-  const fullChordsList = ['I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI'];
-  const availableDropdownChords = (isLegacySyllabus || isEasyMode) ? legacyChords : fullChordsList;
+  // Conditionally populate the active list based on selection requirements
+  const grade8ChordsList = isLegacySyllabus
+    ? ['I', 'II', 'IV', 'V', 'V7', 'VI'] // 2025-2026 Core Triads
+    : ['I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI']; // 2027-2028 Full Positions
 
   return (
     <div style={styles.container}>
@@ -110,7 +104,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
         <div style={styles.score}>Score: {score}/{totalQuestions}</div>
       </div>
 
-      {/* Config Switches Panel Card */}
+      {/* Mode Selector Options Panel */}
       <div style={styles.card}>
         <div style={styles.toggleRow}>
           <label style={styles.toggleLabel}>
@@ -119,11 +113,11 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
               checked={isLegacySyllabus} 
               onChange={(e) => {
                 setIsLegacySyllabus(e.target.checked);
-                setSelectedChords(['', '', '']);
-              }}
-              style={styles.checkbox}
+                setSelectedChords(['', '', '']); // Wipe selections to match new parameters
+              }} 
+              disabled={hasChecked}
             />
-            2025–2026 Syllabus (No Inversions)
+            2025-2026 Syllabus Mode (Skip Inversions)
           </label>
         </div>
         <div style={styles.toggleRow}>
@@ -131,18 +125,15 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
             <input 
               type="checkbox" 
               checked={isEasyMode} 
-              onChange={(e) => {
-                setIsEasyMode(e.target.checked);
-                setSelectedChords(['', '', '']);
-              }}
-              style={styles.checkbox}
+              onChange={(e) => setIsEasyMode(e.target.checked)} 
+              disabled={hasChecked}
             />
-            Easy Mode (Force Root Position Audio)
+            Easy Mode (Force All Chords to Root Position)
           </label>
         </div>
       </div>
 
-      {/* Main Playback Audio Controls Card */}
+      {/* Main Control Panel Card */}
       <div style={styles.card}>
         <h3 style={styles.subtitle}>Current Key: {question.key.name} {question.key.type}</h3>
         
@@ -151,19 +142,18 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
           <button onClick={handlePlayFullProgression} style={styles.primaryAudioBtn}>▶ Play Full Sequence</button>
         </div>
 
+        {/* Syllabus Part (iii): Individual Testing Grid */}
         <div style={styles.individualPlaySection}>
           <p style={styles.sectionLabel}>Play Individual Chords:</p>
           <div style={styles.row}>
-            {[0, 1, 2].map((idx: number) => (
-              <button key={idx} onClick={() => handlePlayIndividualChord(idx)} style={styles.smallAudioBtn}>
-                Chord {idx + 1}
-              </button>
-            ))}
+            <button onClick={() => handlePlayIndividualChord(0)} style={styles.smallAudioBtn}>Chord 1</button>
+            <button onClick={() => handlePlayIndividualChord(1)} style={styles.smallAudioBtn}>Chord 2</button>
+            <button onClick={() => handlePlayIndividualChord(2)} style={styles.smallAudioBtn}>Chord 3</button>
           </div>
         </div>
       </div>
 
-      {/* Input Selection Card */}
+      {/* Input Form Fields */}
       <div style={styles.card}>
         <h4 style={styles.inputTitle}>1. Identify the Cadence Type</h4>
         <div style={styles.grid}>
@@ -183,21 +173,19 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
           ))}
         </div>
 
-        <h4 style={styles.inputTitle}>
-          2. Identify the Three Chords ({isLegacySyllabus ? "Chord Types" : "Including Positions"})
-        </h4>
+        <h4 style={styles.inputTitle}>2. Identify Chords ({isLegacySyllabus ? 'Syllabus Part ii' : 'Syllabus Part iii'})</h4>
         <div style={styles.chordSelectorsRow}>
           {[0, 1, 2].map((chordIdx: number) => (
             <div key={chordIdx} style={styles.chordCol}>
               <label style={styles.chordLabel}>Chord {chordIdx + 1}</label>
               <select
                 value={selectedChords[chordIdx]}
-                onChange={(e) => handleChordSelection(chordIdx, e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleChordSelection(chordIdx, e.target.value)}
                 disabled={hasChecked}
                 style={styles.dropdown}
               >
                 <option value="">Select...</option>
-                {availableDropdownChords.map((c: string) => (
+                {grade8ChordsList.map((c: string) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
@@ -205,6 +193,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
           ))}
         </div>
 
+        {/* Action Button */}
         {!hasChecked ? (
           <button 
             onClick={handleCheckAnswer} 
@@ -220,6 +209,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
         )}
       </div>
 
+      {/* Feedback Banner */}
       {feedback && (
         <div style={{
           ...styles.feedbackBanner,
@@ -237,13 +227,12 @@ const styles: Record<string, React.CSSProperties> = {
   container: { padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   backBtn: { background: 'none', border: 'none', color: '#2563eb', fontSize: '16px', cursor: 'pointer' },
-  title: { fontSize: '18px', margin: 0, fontWeight: 'bold' },
-  score: { fontSize: '14px', background: '#e5e7eb', padding: '4px 8px', borderRadius: '4px' },
+  title: { fontSize: '18px', margin: 0, fontWeight: 'bold', color: '#111827' },
+  score: { fontSize: '14px', background: '#e5e7eb', color: '#1f2937', padding: '4px 8px', borderRadius: '4px' },
   card: { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  toggleRow: { display: 'flex', alignItems: 'center', margin: '6px 0' },
-  toggleLabel: { display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: '#374151', cursor: 'pointer', fontWeight: '500' },
-  checkbox: { width: '16px', height: '16px', cursor: 'pointer' },
-  subtitle: { margin: '0 0 16px 0', fontSize: '16px', textAlign: 'center' },
+  subtitle: { margin: '0 0 16px 0', fontSize: '16px', textAlign: 'center', color: '#1f2937' },
+  toggleRow: { marginBottom: '8px' },
+  toggleLabel: { fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' },
   buttonGroup: { display: 'flex', gap: '12px', marginBottom: '16px' },
-  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
-primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#fff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },individualPlaySection: { borderTop: '1px solid #f3f4f6', paddingTop: '12px' },sectionLabel: { margin: '0 0 8px 0', fontSize: '13px', color: '#6b7280' },row: { display: 'flex', gap: '8px' },smallAudioBtn: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', fontSize: '12px', cursor: 'pointer' },inputTitle: { fontSize: '14px', margin: '0 0 10px 0', color: '#374151' },grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' },selectorBtn: { padding: '12px', border: 'none', borderRadius: '6px', fontWeight: '500', fontSize: '14px', cursor: 'pointer' },chordSelectorsRow: { display: 'flex', gap: '12px', marginBottom: '24px' },chordCol: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' },chordLabel: { fontSize: '12px', color: '#6b7280' },dropdown: { padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', background: '#fff' },actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#2563eb', color: '#fff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#fff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },feedbackBanner: { padding: '14px', borderRadius: '6px', fontSize: '14px', fontWeight: '500', lineHeight: '1.4', textAlign: 'center' }};
+
+  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#ffffff', color: '#1f2937', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#ffffff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },individualPlaySection: { borderTop: '1px solid #f3f4f6', paddingTop: '12px' },sectionLabel: { margin: '0 0 8px 0', fontSize: '13px', color: '#6b7280' },row: { display: 'flex', gap: '8px' },smallAudioBtn: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', color: '#374151', fontSize: '12px', cursor: 'pointer' },inputTitle: { fontSize: '14px', margin: '0 0 10px 0', color: '#374151', fontWeight: '600' },grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' },selectorBtn: { padding: '12px', border: 'none', borderRadius: '6px', fontWeight: '500', fontSize: '14px', cursor: 'pointer' },chordSelectorsRow: { display: 'flex', gap: '12px', marginBottom: '24px' },chordCol: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' },chordLabel: { fontSize: '12px', color: '#6b7280' },dropdown: { padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', background: '#ffffff', color: '#1f2937' },actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#2563eb', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },feedbackBanner: { padding: '14px', borderRadius: '6px', fontSize: '14px', fontWeight: '500', lineHeight: '1.4', textAlign: 'center' }};
