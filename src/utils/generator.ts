@@ -66,7 +66,7 @@ function buildChordMidi(
   }
 
   const formula = ALLOWED_CHORDS[targetSymbol];
-  if (!formula) throw new Error(`Chord symbol ${targetSymbol} not found in rules matrix.`);
+  if (!formula) throw new Error(`Chord symbol ${targetSymbol} not found in rules matrix ${keyType}.`);
 
   let bassMidi = scaleMidiNotes[formula.bass];
   bassMidi -= 12; // Drop bass voice down an octave for clean piano texture

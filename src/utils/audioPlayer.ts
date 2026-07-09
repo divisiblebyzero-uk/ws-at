@@ -19,7 +19,8 @@ const piano = new Tone.Sampler({
   },
   release: 1.2,
   // Pulls directly from the official open-source Salamander Grand Piano asset bank
-  baseUrl: "https://tonejs.github.io/audio/salamander/",
+  baseUrl: "/audio/piano/",
+  // baseUrl: "https://tonejs.github.io/audio/salamander/",
   
   onload: () => {
     console.log("🎹 Grand Piano acoustic samples loaded successfully!");

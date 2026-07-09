@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { generateQuestion, type GeneratedQuestion, getSimplifiedChordSymbol } from '../utils/generator';
+import { generateQuestion, type GeneratedQuestion } from '../utils/generator';
 import { playCadenceProgression, playChord, stopAllAudio } from '../utils/audioPlayer';
 
 interface CadenceQuizProps {
