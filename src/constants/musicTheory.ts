@@ -105,3 +105,23 @@ export const SYLLABUS_2025_CHORDS = ['I', 'II', 'IV', 'V', 'V7', 'VI'];
 
 // 2027/2028 complete Roman numerals list (with specific inversion layout suffixes)
 export const SYLLABUS_2027_CHORDS = ['I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI'];
+
+export interface ModulationDestination {
+  name: string;      // e.g., "Dominant", "Relative Minor"
+  type: KeyType;     // 'major' or 'minor'
+  semitoneOffset: number; // Semitones away from the starting root
+}
+
+// Syllabus Rules: Major starting key destinations
+export const MAJOR_MODULATIONS: ModulationDestination[] = [
+  { name: 'Dominant', type: 'major', semitoneOffset: 7 },     // C Major -> G Major
+  { name: 'Subdominant', type: 'major', semitoneOffset: 5 },  // C Major -> F Major
+  { name: 'Relative Minor', type: 'minor', semitoneOffset: 9 } // C Major -> A Minor
+];
+
+// Syllabus Rules: Minor starting key destinations
+export const MINOR_MODULATIONS: ModulationDestination[] = [
+  { name: 'Dominant', type: 'minor', semitoneOffset: 7 },     // A Minor -> E Minor
+  { name: 'Subdominant', type: 'minor', semitoneOffset: 5 },  // A Minor -> D Minor
+  { name: 'Relative Major', type: 'major', semitoneOffset: 3 } // A Minor -> C Major
+];

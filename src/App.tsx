@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CadenceQuiz } from './components/CadenceQuiz';
+import { ModulationQuiz } from './components/ModulationQuiz';
 
 type ActiveView = 'dashboard' | 'cadences' | 'modulations';
 
@@ -32,13 +33,13 @@ export const App: React.FC = () => {
             {/* Modulation Training Button */}
             <button 
               onClick={() => setCurrentView('modulations')} 
-              style={{ ...styles.menuCard, borderLeft: '6px solid #d97706', opacity: 0.7 }}
+              style={{ ...styles.menuCard, borderLeft: '6px solid #d97706' }}
             >
               <div style={styles.icon}>🔄</div>
               <div style={styles.cardContent}>
                 <h3 style={styles.cardTitle}>Modulations</h3>
                 <p style={styles.cardDesc}>Track transitions to the dominant, subdominant, or relative keys.</p>
-                <span style={styles.badge}>Coming Next</span>
+                
               </div>
             </button>
           </div>
@@ -56,13 +57,7 @@ export const App: React.FC = () => {
 
       {/* 3. MODULATION PRACTICE SCREEN (PLACEHOLDER) */}
       {currentView === 'modulations' && (
-        <div style={styles.placeholderContainer}>
-          <h2>Modulation Tests</h2>
-          <p>This module will generate progressions that transition into a new key center.</p>
-          <button onClick={() => setCurrentView('dashboard')} style={styles.backBtn}>
-            Return to Dashboard
-          </button>
-        </div>
+        <ModulationQuiz onBackToMenu={() => setCurrentView('dashboard')} />
       )}
     </div>
   );
