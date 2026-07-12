@@ -39,7 +39,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
   const handlePlayFullProgression = async () => {
     if (!question) return;
     // Crucial for Mobile: Wakes up the mobile device audio engine on user interaction
-    await Tone.start(); 
+    await Tone.start();
     playCadenceProgression(question.keyChordMidi, question.progressionMidi);
   };
 
@@ -89,7 +89,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
   if (!question) return <div style={styles.container}>Loading Test Engine...</div>;
 
   const cadenceOptions = ['Perfect', 'Imperfect', 'Plagal', 'Interrupted'];
-  
+
   // Conditionally populate the active list based on selection requirements
   const grade8ChordsList = isLegacySyllabus
     ? ['I', 'II', 'IV', 'V', 'V7', 'VI'] // 2025-2026 Core Triads
@@ -108,13 +108,13 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
       <div style={styles.card}>
         <div style={styles.toggleRow}>
           <label style={styles.toggleLabel}>
-            <input 
-              type="checkbox" 
-              checked={isLegacySyllabus} 
+            <input
+              type="checkbox"
+              checked={isLegacySyllabus}
               onChange={(e) => {
                 setIsLegacySyllabus(e.target.checked);
                 setSelectedChords(['', '', '']); // Wipe selections to match new parameters
-              }} 
+              }}
               disabled={hasChecked}
             />
             2025-2026 Syllabus Mode (Skip Inversions)
@@ -122,10 +122,10 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
         </div>
         <div style={styles.toggleRow}>
           <label style={styles.toggleLabel}>
-            <input 
-              type="checkbox" 
-              checked={isEasyMode} 
-              onChange={(e) => setIsEasyMode(e.target.checked)} 
+            <input
+              type="checkbox"
+              checked={isEasyMode}
+              onChange={(e) => setIsEasyMode(e.target.checked)}
               disabled={hasChecked}
             />
             Easy Mode (Force All Chords to Root Position)
@@ -136,7 +136,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
       {/* Main Control Panel Card */}
       <div style={styles.card}>
         <h3 style={styles.subtitle}>Current Key: {question.key.name} {question.key.type}</h3>
-        
+
         <div style={styles.buttonGroup}>
           <button onClick={handlePlayKeyChordOnly} style={styles.audioBtn}>🎹 Play Key-Chord</button>
           <button onClick={handlePlayFullProgression} style={styles.primaryAudioBtn}>▶ Play Full Sequence</button>
@@ -195,9 +195,9 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
 
         {/* Action Button */}
         {!hasChecked ? (
-          <button 
-            onClick={handleCheckAnswer} 
-            disabled={!selectedCadence || selectedChords.some((c: string) => c === '')} 
+          <button
+            onClick={handleCheckAnswer}
+            disabled={!selectedCadence || selectedChords.some((c: string) => c === '')}
             style={styles.actionBtn}
           >
             Submit Answer
@@ -235,4 +235,16 @@ const styles: Record<string, React.CSSProperties> = {
   toggleLabel: { fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' },
   buttonGroup: { display: 'flex', gap: '12px', marginBottom: '16px' },
 
-  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#ffffff', color: '#1f2937', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#ffffff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },individualPlaySection: { borderTop: '1px solid #f3f4f6', paddingTop: '12px' },sectionLabel: { margin: '0 0 8px 0', fontSize: '13px', color: '#6b7280' },row: { display: 'flex', gap: '8px' },smallAudioBtn: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', color: '#374151', fontSize: '12px', cursor: 'pointer' },inputTitle: { fontSize: '14px', margin: '0 0 10px 0', color: '#374151', fontWeight: '600' },grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' },selectorBtn: { padding: '12px', border: 'none', borderRadius: '6px', fontWeight: '500', fontSize: '14px', cursor: 'pointer' },chordSelectorsRow: { display: 'flex', gap: '12px', marginBottom: '24px' },chordCol: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' },chordLabel: { fontSize: '12px', color: '#6b7280' },dropdown: { padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', background: '#ffffff', color: '#1f2937' },actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#2563eb', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },feedbackBanner: { padding: '14px', borderRadius: '6px', fontSize: '14px', fontWeight: '500', lineHeight: '1.4', textAlign: 'center' }};
+  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#ffffff', color: '#1f2937', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }, 
+  primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#ffffff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }, 
+  individualPlaySection: { borderTop: '1px solid #f3f4f6', paddingTop: '12px' }, sectionLabel: { margin: '0 0 8px 0', fontSize: '13px', color: '#6b7280' }, 
+  row: { display: 'flex', gap: '8px' }, 
+  smallAudioBtn: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', color: '#374151', fontSize: '12px', cursor: 'pointer' }, 
+  inputTitle: { fontSize: '14px', margin: '0 0 10px 0', color: '#374151', fontWeight: '600' }, grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }, 
+  selectorBtn: { padding: '12px', border: 'none', borderRadius: '6px', fontWeight: '500', fontSize: '14px', cursor: 'pointer' }, chordSelectorsRow: { display: 'flex', gap: '12px', marginBottom: '24px' }, 
+  chordCol: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }, chordLabel: { fontSize: '12px', color: '#6b7280' }, 
+  dropdown: { padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', background: '#ffffff', color: '#1f2937' }, 
+  actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#2563eb', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }, 
+  nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }, 
+  feedbackBanner: { padding: '14px', borderRadius: '6px', fontSize: '14px', fontWeight: '500', lineHeight: '1.4', textAlign: 'center' }
+};

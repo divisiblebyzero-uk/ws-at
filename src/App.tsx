@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { CadenceQuiz } from './components/CadenceQuiz';
 import { ModulationQuiz } from './components/ModulationQuiz';
+import { AudioSandbox } from './components/AudioSandbox';
 
-type ActiveView = 'dashboard' | 'cadences' | 'modulations';
+type ActiveView = 'dashboard' | 'cadences' | 'modulations' | 'sandbox';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ActiveView>('dashboard');
@@ -42,6 +43,18 @@ export const App: React.FC = () => {
                 
               </div>
             </button>
+
+            {/* Audio Sandbox Menu Button Link */}
+            <button 
+              onClick={() => setCurrentView('sandbox')} 
+              style={{ ...styles.menuCard, borderLeft: '6px solid #059669' }}
+            >
+              <div style={styles.icon}>🔊</div>
+              <div style={styles.cardContent}>
+                <h3 style={styles.cardTitle}>Audio Reference Sandbox</h3>
+                <p style={styles.cardDesc}>Select any musical scale to sample individual chord inversions and cadence models.</p>
+              </div>
+            </button>
           </div>
 
           <div style={styles.footer}>
@@ -58,6 +71,11 @@ export const App: React.FC = () => {
       {/* 3. MODULATION PRACTICE SCREEN (PLACEHOLDER) */}
       {currentView === 'modulations' && (
         <ModulationQuiz onBackToMenu={() => setCurrentView('dashboard')} />
+      )}
+
+      {/* 4. AUDIO SANDBOX SCREEN */}
+      {currentView === 'sandbox' && (
+        <AudioSandbox onBackToMenu={() => setCurrentView('dashboard')} />
       )}
     </div>
   );

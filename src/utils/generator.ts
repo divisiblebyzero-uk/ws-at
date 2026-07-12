@@ -72,10 +72,13 @@ function buildChordMidi(
   bassMidi -= 12; // Drop bass voice down an octave for clean piano texture
 
   const finalChordNotes: number[] = [bassMidi];
-  for (let i = 0; i < formula.structure.length; i++) {
-    const interval = formula.structure[i];
+  const structure = keyType === 'major' ? formula.structureMajor : formula.structureMinor;
+  
+  for (let i = 0; i < structure.length; i++) {
+    const interval = structure[i];
     finalChordNotes.push(bassMidi + interval);
   }
+
 
   return finalChordNotes;
 }
