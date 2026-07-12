@@ -3,187 +3,243 @@ import { CadenceQuiz } from './components/CadenceQuiz';
 import { ModulationQuiz } from './components/ModulationQuiz';
 import { AudioSandbox } from './components/AudioSandbox';
 
-type ActiveView = 'dashboard' | 'cadences' | 'modulations' | 'sandbox';
+type ActiveView = 'grade-selector' | 'grade-dashboard' | 'cadences' | 'modulations' | 'sandbox';
 
 export const App: React.FC = () => {
-  const [currentView, setCurrentView] = useState<ActiveView>('dashboard');
+  const [currentView, setCurrentView] = useState<ActiveView>('grade-selector');
+  const [selectedGrade, setSelectedGrade] = useState<number>(8);
+
+  const handleSelectGrade = (grade: number) => {
+    setSelectedGrade(grade);
+    if (grade === 7 || grade === 8) {
+      setCurrentView('grade-dashboard');
+    } else {
+      alert(`Grade ${grade} curriculum parameters coming soon!`);
+    }
+  };
+
+  const gradesArray: number[] = Array.of(1, 2, 3, 4, 5, 6, 7, 8);
 
   return (
     <div style={styles.appShell}>
-      {/* 1. MAIN DASHBOARD VIEW */}
-      {currentView === 'dashboard' && (
+      {/* VIEW 1: THE GRADE SELECTOR MENU */}
+      {currentView === 'grade-selector' && (
         <div style={styles.container}>
           <div style={styles.heroSection}>
-            <h1 style={styles.mainTitle}>ABRSM Grade 8</h1>
-            <p style={styles.subTitle}>Practical Piano Aural Trainer</p>
+            <h1 style={styles.mainTitle}>Divisible By Zero</h1>
+            <p style={styles.subTitle}>ABRSM Aural Examination Suite</p>
           </div>
-
-          <div style={styles.menuGrid}>
-            {/* Cadence Training Button */}
-            <button 
-              onClick={() => setCurrentView('cadences')} 
-              style={{ ...styles.menuCard, borderLeft: '6px solid #2563eb' }}
-            >
-              <div style={styles.icon}>🎼</div>
-              <div style={styles.cardContent}>
-                <h3 style={styles.cardTitle}>Cadence Progressions</h3>
-                <p style={styles.cardDesc}>Identify cadences and 3-chord inversion positions (Syllabus part iii).</p>
-              </div>
-            </button>
-
-            {/* Modulation Training Button */}
-            <button 
-              onClick={() => setCurrentView('modulations')} 
-              style={{ ...styles.menuCard, borderLeft: '6px solid #d97706' }}
-            >
-              <div style={styles.icon}>🔄</div>
-              <div style={styles.cardContent}>
-                <h3 style={styles.cardTitle}>Modulations</h3>
-                <p style={styles.cardDesc}>Track transitions to the dominant, subdominant, or relative keys.</p>
-                
-              </div>
-            </button>
-
-            {/* Audio Sandbox Menu Button Link */}
-            <button 
-              onClick={() => setCurrentView('sandbox')} 
-              style={{ ...styles.menuCard, borderLeft: '6px solid #059669' }}
-            >
-              <div style={styles.icon}>🔊</div>
-              <div style={styles.cardContent}>
-                <h3 style={styles.cardTitle}>Audio Reference Sandbox</h3>
-                <p style={styles.cardDesc}>Select any musical scale to sample individual chord inversions and cadence models.</p>
-              </div>
-            </button>
-          </div>
-
-          <div style={styles.footer}>
-            <p>Configured for 2027/2028 Syllabus Requirements</p>
+          
+          <div style={styles.gradeGrid}>
+            {gradesArray.map((g: number) => {
+              const isReady = g === 7 || g === 8;
+              return (
+                <button 
+                  key={g} 
+                  onClick={() => handleSelectGrade(g)} 
+                  style={{
+                    ...styles.gradeCard,
+                    borderLeft: isReady ? '5px solid #2563eb' : '5px solid #d1d5db',
+                    backgroundColor: isReady ? '#ffffff' : '#f3f4f6'
+                  }}
+                >
+                  Grade {g} {isReady && <span style={styles.activeBadge}>Ready</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
 
-      {/* 2. CADENCE PRACTICE SCREEN */}
-      {currentView === 'cadences' && (
-        <CadenceQuiz onBackToMenu={() => setCurrentView('dashboard')} />
+      {/* VIEW 2: DYNAMIC GRADE DASHBOARD SCREEN */}
+      {currentView === 'grade-dashboard' && (
+        <div style={styles.container}>
+          <div style={styles.navigationHeader}>
+            <button onClick={() => setCurrentView('grade-selector')} style={styles.backLink}>
+              ← Change Grade
+            </button>
+            <div style={styles.pillBadge}>Grade {selectedGrade} Active</div>
+          </div>
+
+          <div style={styles.heroSection}>
+            <h2 style={styles.dashboardTitle}>Practical Aural Dashboard</h2>
+            <p style={styles.subTitle}>Select a practice module matching the exam guidelines</p>
+          </div>
+          
+          <div style={styles.menuGrid}>
+            <button onClick={() => setCurrentView('cadences')} style={{ ...styles.menuCard, borderLeft: '6px solid #2563eb' }}>
+              <div style={styles.cardIcon}>🎼</div>
+              <div style={styles.cardContent}>
+                <h3 style={styles.cardTitle}>Cadence Progressions</h3>
+                <p style={styles.cardDesc}>
+                  {selectedGrade === 7 
+                    ? 'Identify 2-chord root-position cadences (Perfect, Imperfect, Interrupted).' 
+                    : 'Identify 3-chord cadences and complex inversion positions.'}
+                </p>
+              </div>
+            </button>
+
+            <button onClick={() => setCurrentView('modulations')} style={{ ...styles.menuCard, borderLeft: '6px solid #d97706' }}>
+              <div style={styles.cardIcon}>🔄</div>
+              <div style={styles.cardContent}>
+                <h3 style={styles.cardTitle}>Modulations</h3>
+                <p style={styles.cardDesc}>
+                  {selectedGrade === 7 
+                    ? 'Track transitions starting from Major keys to Dominant, Subdominant, or Relative Minor.' 
+                    : 'Track advanced Major and minor starting key variations.'}
+                </p>
+              </div>
+            </button>
+
+            <button onClick={() => setCurrentView('sandbox')} style={{ ...styles.menuCard, borderLeft: '6px solid #059669' }}>
+              <div style={styles.cardIcon}>🔊</div>
+              <div style={styles.cardContent}>
+                <h3 style={styles.cardTitle}>Audio Reference Sandbox</h3>
+                <p style={styles.cardDesc}>Explore 4-voice chord qualities and animated real-time piano layouts.</p>
+              </div>
+            </button>
+          </div>
+        </div>
       )}
 
-      {/* 3. MODULATION PRACTICE SCREEN (PLACEHOLDER) */}
-      {currentView === 'modulations' && (
-        <ModulationQuiz onBackToMenu={() => setCurrentView('dashboard')} />
-      )}
-
-      {/* 4. AUDIO SANDBOX SCREEN */}
-      {currentView === 'sandbox' && (
-        <AudioSandbox onBackToMenu={() => setCurrentView('dashboard')} />
-      )}
+      {/* VIEW 3: CORE QUIZ MODULES (Passing the selectedGrade context prop down) */}
+      {currentView === 'cadences' && <CadenceQuiz grade={selectedGrade} onBackToMenu={() => setCurrentView('grade-dashboard')} />}
+      {currentView === 'modulations' && <ModulationQuiz grade={selectedGrade} onBackToMenu={() => setCurrentView('grade-dashboard')} />}
+      {currentView === 'sandbox' && <AudioSandbox onBackToMenu={() => setCurrentView('grade-dashboard')} />}
     </div>
   );
 };
 
-// Touch-friendly responsive mobile styles
+
+// Polished layout engine properties insulated against native dark mode overriding
 const styles: Record<string, React.CSSProperties> = {
-  appShell: {
-    backgroundColor: '#f9fafb',
-    minHeight: '100vh',
-    width: '100%',
-    margin: 0,
-    padding: 0,
-    boxSizing: 'border-box'
+  appShell: { 
+    backgroundColor: '#f9fafb', 
+    minHeight: '100vh', 
+    width: '100%', 
+    margin: 0, 
+    padding: 0, 
+    boxSizing: 'border-box' 
   },
-  container: {
-    padding: '24px 16px',
-    maxWidth: '500px',
-    margin: '0 auto',
-    fontFamily: 'system-ui, -apple-system, sans-serif'
+  container: { 
+    padding: '24px 16px', 
+    maxWidth: '500px', 
+    margin: '0 auto', 
+    fontFamily: 'system-ui, -apple-system, sans-serif' 
   },
-  heroSection: {
-    textAlign: 'center',
-    margin: '32px 0'
+  heroSection: { 
+    textAlign: 'center', 
+    margin: '24px 0' 
   },
-  mainTitle: {
-    fontSize: '28px',
-    fontWeight: '800',
-    color: '#111827',
-    margin: '0 0 4px 0'
+  mainTitle: { 
+    fontSize: '28px', 
+    fontWeight: '800', 
+    color: '#111827', 
+    margin: '0 0 4px 0' 
   },
-  subTitle: {
-    fontSize: '16px',
-    color: '#4b5563',
-    margin: 0
+  dashboardTitle: { 
+    fontSize: '24px', 
+    fontWeight: '800', 
+    color: '#111827', 
+    margin: '0 0 4px 0' 
   },
-  menuGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '16px',
-    marginBottom: '40px'
+  subTitle: { 
+    fontSize: '14px', 
+    color: '#4b5563', 
+    margin: 0, 
+    lineHeight: '1.4' 
   },
-  menuCard: {
-    display: 'flex',
-    alignItems: 'center',
-    textAlign: 'left',
-    padding: '20px',
-    backgroundColor: '#ffffff',
-    borderRadius: '12px',
-    border: '1px solid #e5e7eb',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
-    cursor: 'pointer',
-    width: '100%',
-    transition: 'transform 0.1s ease',
-    outline: 'none'
+  navigationHeader: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: '16px' 
   },
-  icon: {
-    fontSize: '32px',
-    marginRight: '16px',
-    minWidth: '40px',
-    textAlign: 'center'
+  backLink: { 
+    background: 'none', 
+    border: 'none', 
+    color: '#2563eb', 
+    fontSize: '15px', 
+    fontWeight: '600', 
+    cursor: 'pointer', 
+    padding: 0 
   },
-  cardContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    position: 'relative',
-    width: '100%'
+  pillBadge: { 
+    fontSize: '11px', 
+    backgroundColor: '#e0f2fe', 
+    color: '#0369a1', 
+    padding: '4px 10px', 
+    borderRadius: '9999px', 
+    fontWeight: 'bold' 
   },
-  cardTitle: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#1f2937',
-    margin: '0 0 4px 0'
+  gradeGrid: { 
+    display: 'grid', 
+    gridTemplateColumns: '1fr 1fr', 
+    gap: '12px', 
+    marginTop: '16px' 
   },
-  cardDesc: {
-    fontSize: '13px',
-    color: '#6b7280',
-    margin: 0,
-    lineHeight: '1.4'
+  gradeCard: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    padding: '16px', 
+    color: '#1f2937', 
+    borderRadius: '10px', 
+    border: '1px solid #e5e7eb', 
+    boxShadow: '0 1px 3px rgba(0,0,0,0.02)', 
+    fontWeight: '700', 
+    fontSize: '15px', 
+    cursor: 'pointer', 
+    textAlign: 'left' 
   },
-  badge: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f59e0b',
-    color: '#ffffff',
-    fontSize: '10px',
-    fontWeight: 'bold',
-    padding: '2px 6px',
-    borderRadius: '4px',
-    marginTop: '8px',
-    textTransform: 'uppercase'
+  activeBadge: { 
+    fontSize: '10px', 
+    backgroundColor: '#dbeafe', 
+    color: '#2563eb', 
+    padding: '2px 6px', 
+    borderRadius: '4px', 
+    textTransform: 'uppercase' 
   },
-  footer: {
-    textAlign: 'center',
-    fontSize: '12px',
-    color: '#9ca3af',
-    marginTop: 'auto'
+  menuGrid: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: '16px' 
   },
-  placeholderContainer: {
-    padding: '40px 20px',
-    textAlign: 'center',
-    fontFamily: 'system-ui, sans-serif'
+  menuCard: { 
+    display: 'flex', 
+    alignItems: 'center', 
+    textAlign: 'left', 
+    padding: '18px', 
+    backgroundColor: '#ffffff', 
+    borderRadius: '12px', 
+    border: '1px solid #e5e7eb', 
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)', 
+    cursor: 'pointer', 
+    width: '100%', 
+    outline: 'none' 
   },
-  backBtn: {
-    padding: '10px 20px',
-    borderRadius: '6px',
-    border: '1px solid #d1d5db',
-    backgroundColor: '#ffffff',
-    cursor: 'pointer',
-    marginTop: '16px'
+  cardIcon: { 
+    fontSize: '28px', 
+    marginRight: '16px', 
+    minWidth: '36px', 
+    textAlign: 'center' 
+  },
+  cardContent: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    width: '100%' 
+  },
+  cardTitle: { 
+    fontSize: '16px', 
+    fontWeight: '700', 
+    color: '#1f2937', 
+    margin: '0 0 4px 0' 
+  },
+  cardDesc: { 
+    fontSize: '12px', 
+    color: '#6b7280', 
+    margin: 0, 
+    lineHeight: '1.4' 
   }
 };
+

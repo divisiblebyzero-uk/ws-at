@@ -4,15 +4,22 @@ import { playCadenceProgression, playChord, stopAllAudio } from '../utils/audioP
 import * as Tone from 'tone';
 
 interface ModulationQuizProps {
+  grade: number;
   onBackToMenu: () => void;
 }
 
-export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ onBackToMenu }) => {
+export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToMenu }) => {
   const [phase, setPhase] = useState<'majorStart' | 'minorStart'>('majorStart');
   const [question, setQuestion] = useState<ModulationQuestion | null>(null);
   const [selectedGuess, setSelectedGuess] = useState<string>('');
   const [hasChecked, setHasChecked] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (grade === 7) {
+        setPhase('majorStart');
+    }
+  }, [grade]);
 
   useEffect(() => {
     loadNewQuestion();
@@ -53,6 +60,10 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ onBackToMenu }) 
   };
 
   const handleNextPhase = () => {
+     if (grade === 7) {
+      loadNewQuestion(); // Grade 7 rule: Bypass minor start, cycle straight to next Major question
+      return;
+    }
     if (phase === 'majorStart') {
       setPhase('minorStart'); // Step to part 2 of the syllabus requirements
     } else {
@@ -70,7 +81,7 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ onBackToMenu }) 
     <div style={styles.container}>
       <div style={styles.header}>
         <button onClick={onBackToMenu} style={styles.backBtn}>← Menu</button>
-        <h2 style={styles.title}>Modulation Trainer (Grade 8)</h2>
+        <h2 style={styles.title}>Modulation Trainer (Grade {grade})</h2>
         <div style={styles.phaseBadge}>{phase === 'majorStart' ? 'Test 1: Major Start' : 'Test 2: Minor Start'}</div>
       </div>
 

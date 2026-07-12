@@ -1,57 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import * as Tone from 'tone'; // Correct import path for the Tone audio instance
 import { generateQuestion, type GeneratedQuestion } from '../utils/generator';
 import { playCadenceProgression, playChord, stopAllAudio } from '../utils/audioPlayer';
+import * as Tone from 'tone';
 
 interface CadenceQuizProps {
+  grade: number; // Add this line to the interface declaration
   onBackToMenu: () => void;
 }
 
-export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
+export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu }) => {
+  const [easyMode, setEasyMode] = useState<boolean>(false);
   const [question, setQuestion] = useState<GeneratedQuestion | null>(null);
   const [selectedCadence, setSelectedCadence] = useState<string>('');
-  const [selectedChords, setSelectedChords] = useState<string[]>(['', '', '']);
+  
+  // Dynamic initialization array size matching the grade level chords requirement
+  const initialChordsArray = grade === 7 ? Array.of('', '') : Array.of('', '', '');
+  const [selectedChords, setSelectedChords] = useState<string[]>(initialChordsArray);
+  
   const [hasChecked, setHasChecked] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [score, setScore] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
 
-  // Syllabus Configuration Settings
-  const [isLegacySyllabus, setIsLegacySyllabus] = useState<boolean>(false); // True = 2025-2026 mode (No inversions checked)
-  const [isEasyMode, setIsEasyMode] = useState<boolean>(false); // True = Restricts playback strictly to root position
-
-  // Load a random question sequence immediately when entering the view
   useEffect(() => {
-    handleNextQuestion();
-    return () => stopAllAudio(); // Safety clean-up if user leaves mid-playback
-  }, [isEasyMode]);
+    handleNextQuestion(easyMode);
+    return () => stopAllAudio();
+  }, [easyMode]);
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = (currentEasyModeSetting: boolean = easyMode) => {
     stopAllAudio();
-    const newQuestion = generateQuestion(isEasyMode);
+    const newQuestion = generateQuestion(currentEasyModeSetting, grade);
     setQuestion(newQuestion);
     setSelectedCadence('');
-    setSelectedChords(['', '', '']);
+    setSelectedChords(grade === 7 ? Array.of('', '') : Array.of('', '', ''));
     setHasChecked(false);
     setFeedback(null);
   };
 
   const handlePlayFullProgression = async () => {
     if (!question) return;
-    // Crucial for Mobile: Wakes up the mobile device audio engine on user interaction
-    await Tone.start();
+    await Tone.getContext().resume();
     playCadenceProgression(question.keyChordMidi, question.progressionMidi);
   };
 
   const handlePlayKeyChordOnly = async () => {
     if (!question) return;
-    await Tone.start();
+    await Tone.getContext().resume();
     playChord(question.keyChordMidi, '1n');
   };
 
   const handlePlayIndividualChord = async (index: number) => {
     if (!question) return;
-    await Tone.start();
+    await Tone.getContext().resume();
     playChord(question.progressionMidi[index], '1n');
   };
 
@@ -64,21 +64,16 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
   const handleCheckAnswer = () => {
     if (!question) return;
 
-    // Check Part 1: Cadence Name Identification
     const cadenceIsCorrect = selectedCadence.toLowerCase() === question.cadenceType.toLowerCase();
-
-    // Check Part 2: Chord Tracking (Switches target array evaluation depending on Syllabus setting)
-    const targetSolutionSymbols = isLegacySyllabus ? question.simplifiedSymbols : question.chordSymbols;
-    const chordsAreCorrect = selectedChords.every((chord, idx) => chord === targetSolutionSymbols[idx]);
-
+    const chordsAreCorrect = selectedChords.every((chord, idx) => chord === question.chordSymbols[idx]);
     const isFullyCorrect = cadenceIsCorrect && chordsAreCorrect;
 
     if (isFullyCorrect) {
       setScore(prev => prev + 1);
-      setFeedback({ isCorrect: true, message: 'Excellent! Perfect tracking of both the cadence and chord forms.' });
+      setFeedback({ isCorrect: true, message: 'Excellent! Perfect tracking of both the cadence and positions.' });
     } else {
       let msg = `Incorrect. The correct cadence was ${question.cadenceType}. `;
-      msg += `The progression was: ${targetSolutionSymbols.join(' — ')}.`;
+      msg += `The progression was: ${question.chordSymbols.join(' — ')}.`;
       setFeedback({ isCorrect: false, message: msg });
     }
 
@@ -88,61 +83,45 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
 
   if (!question) return <div style={styles.container}>Loading Test Engine...</div>;
 
-  const cadenceOptions = ['Perfect', 'Imperfect', 'Plagal', 'Interrupted'];
-
-  // Conditionally populate the active list based on selection requirements
-  const grade8ChordsList = isLegacySyllabus
-    ? ['I', 'II', 'IV', 'V', 'V7', 'VI'] // 2025-2026 Core Triads
-    : ['I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI']; // 2027-2028 Full Positions
+  // Update the options array inside the return block to draw exactly 2 or 3 selectors:
+  const chordIndexes: number[] = grade === 7 ? Array.of(0, 1) : Array.of(0, 1, 2);
+  const cadenceOptions = grade === 7 ? ['Perfect', 'Imperfect', 'Interrupted'] : ['Perfect', 'Imperfect', 'Plagal', 'Interrupted'];
+  const grade7ChordsList = ['I', 'IV', 'V', 'V7', 'VI'];
+  const grade8ChordsList = easyMode ? ['I', 'II', 'IV', 'V', 'VI'] : ['I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI'];
+  const activeChordsList = grade === 7 ? grade7ChordsList : grade8ChordsList;
+  
 
   return (
     <div style={styles.container}>
       {/* Header Bar */}
       <div style={styles.header}>
         <button onClick={onBackToMenu} style={styles.backBtn}>← Menu</button>
-        <h2 style={styles.title}>Cadence Trainer (Grade 8)</h2>
+        <h2 style={styles.title}>Cadence Quiz (Grade 8)</h2>
         <div style={styles.score}>Score: {score}/{totalQuestions}</div>
       </div>
 
-      {/* Mode Selector Options Panel */}
-      <div style={styles.card}>
+      {/* Dynamic Toggle Row for Easy Mode for Grade 8 */}
+      {grade === 8 && (
         <div style={styles.toggleRow}>
-          <label style={styles.toggleLabel}>
-            <input
-              type="checkbox"
-              checked={isLegacySyllabus}
-              onChange={(e) => {
-                setIsLegacySyllabus(e.target.checked);
-                setSelectedChords(['', '', '']); // Wipe selections to match new parameters
-              }}
-              disabled={hasChecked}
-            />
-            2025-2026 Syllabus Mode (Skip Inversions)
-          </label>
+          <span style={styles.toggleLabel}>🎹 Easy Mode (Root Chords Only)</span>
+          <input 
+            type="checkbox" 
+            checked={easyMode} 
+            onChange={(e) => setEasyMode(e.target.checked)}
+            style={styles.checkboxInput}
+          />
         </div>
-        <div style={styles.toggleRow}>
-          <label style={styles.toggleLabel}>
-            <input
-              type="checkbox"
-              checked={isEasyMode}
-              onChange={(e) => setIsEasyMode(e.target.checked)}
-              disabled={hasChecked}
-            />
-            Easy Mode (Force All Chords to Root Position)
-          </label>
-        </div>
-      </div>
+      )}
 
       {/* Main Control Panel Card */}
       <div style={styles.card}>
         <h3 style={styles.subtitle}>Current Key: {question.key.name} {question.key.type}</h3>
-
+        
         <div style={styles.buttonGroup}>
           <button onClick={handlePlayKeyChordOnly} style={styles.audioBtn}>🎹 Play Key-Chord</button>
           <button onClick={handlePlayFullProgression} style={styles.primaryAudioBtn}>▶ Play Full Sequence</button>
         </div>
 
-        {/* Syllabus Part (iii): Individual Testing Grid */}
         <div style={styles.individualPlaySection}>
           <p style={styles.sectionLabel}>Play Individual Chords:</p>
           <div style={styles.row}>
@@ -153,17 +132,17 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
         </div>
       </div>
 
-      {/* Input Form Fields */}
+      {/* Input Choices Form Panel */}
       <div style={styles.card}>
         <h4 style={styles.inputTitle}>1. Identify the Cadence Type</h4>
         <div style={styles.grid}>
-          {cadenceOptions.map((opt: string) => (
+          {cadenceOptions.map(opt => (
             <button
               key={opt}
               onClick={() => !hasChecked && setSelectedCadence(opt)}
               style={{
                 ...styles.selectorBtn,
-                backgroundColor: selectedCadence === opt ? '#3b82f6' : '#f3f4f6',
+                backgroundColor: selectedCadence === opt ? '#2563eb' : '#f3f4f6',
                 color: selectedCadence === opt ? '#ffffff' : '#1f2937'
               }}
               disabled={hasChecked}
@@ -173,43 +152,39 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ onBackToMenu }) => {
           ))}
         </div>
 
-        <h4 style={styles.inputTitle}>2. Identify Chords ({isLegacySyllabus ? 'Syllabus Part ii' : 'Syllabus Part iii'})</h4>
+        <h4 style={styles.inputTitle}>2. Identify the Three Chords</h4>
         <div style={styles.chordSelectorsRow}>
-          {[0, 1, 2].map((chordIdx: number) => (
-            <div key={chordIdx} style={styles.chordCol}>
-              <label style={styles.chordLabel}>Chord {chordIdx + 1}</label>
-              <select
-                value={selectedChords[chordIdx]}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleChordSelection(chordIdx, e.target.value)}
-                disabled={hasChecked}
-                style={styles.dropdown}
-              >
-                <option value="">Select...</option>
-                {grade8ChordsList.map((c: string) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
-          ))}
+            {chordIndexes.map((chordIdx: number) => (
+              <div key={chordIdx} style={styles.chordCol}>
+                <label style={styles.chordLabel}>Chord {chordIdx + 1}</label>
+                <select
+                  value={selectedChords[chordIdx]}
+                  onChange={(e) => handleChordSelection(chordIdx, e.target.value)}
+                  disabled={hasChecked}
+                  style={styles.dropdown}
+                >
+                  <option value="">...</option>
+                  {activeChordsList.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            ))}
         </div>
 
-        {/* Action Button */}
         {!hasChecked ? (
-          <button
-            onClick={handleCheckAnswer}
-            disabled={!selectedCadence || selectedChords.some((c: string) => c === '')}
+          <button 
+            onClick={handleCheckAnswer} 
+            disabled={!selectedCadence || selectedChords.some(c => c === '')} 
             style={styles.actionBtn}
           >
             Submit Answer
           </button>
         ) : (
-          <button onClick={handleNextQuestion} style={styles.nextBtn}>
+          <button onClick={() => handleNextQuestion(easyMode)} style={styles.nextBtn}>
             Next Question →
           </button>
         )}
       </div>
 
-      {/* Feedback Banner */}
       {feedback && (
         <div style={{
           ...styles.feedbackBanner,
@@ -231,7 +206,19 @@ const styles: Record<string, React.CSSProperties> = {
   score: { fontSize: '14px', background: '#e5e7eb', color: '#1f2937', padding: '4px 8px', borderRadius: '4px' },
   card: { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
   subtitle: { margin: '0 0 16px 0', fontSize: '16px', textAlign: 'center', color: '#1f2937' },
-  toggleRow: { marginBottom: '8px' },
+    toggleRow: { 
+    display: 'flex', 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    background: '#fef3c7', 
+    border: '1px solid #fde68a', 
+    padding: '12px 16px', 
+    borderRadius: '8px', 
+    marginBottom: '14px',
+    boxSizing: 'border-box',
+    width: '100%'
+  },
   toggleLabel: { fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' },
   buttonGroup: { display: 'flex', gap: '12px', marginBottom: '16px' },
 
