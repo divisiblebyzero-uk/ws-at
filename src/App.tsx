@@ -11,7 +11,7 @@ export const App: React.FC = () => {
 
   const handleSelectGrade = (grade: number) => {
     setSelectedGrade(grade);
-    if (grade === 7 || grade === 8) {
+    if (grade === 6 || grade === 7 || grade === 8) {
       setCurrentView('grade-dashboard');
     } else {
       alert(`Grade ${grade} curriculum parameters coming soon!`);
@@ -32,7 +32,7 @@ export const App: React.FC = () => {
           
           <div style={styles.gradeGrid}>
             {gradesArray.map((g: number) => {
-              const isReady = g === 7 || g === 8;
+              const isReady = g === 6 || g === 7 || g === 8;
               return (
                 <button 
                   key={g} 
@@ -67,38 +67,52 @@ export const App: React.FC = () => {
           </div>
           
           <div style={styles.menuGrid}>
-            <button onClick={() => setCurrentView('cadences')} style={{ ...styles.menuCard, borderLeft: '6px solid #2563eb' }}>
-              <div style={styles.cardIcon}>🎼</div>
-              <div style={styles.cardContent}>
-                <h3 style={styles.cardTitle}>Cadence Progressions</h3>
-                <p style={styles.cardDesc}>
-                  {selectedGrade === 7 
-                    ? 'Identify 2-chord root-position cadences (Perfect, Imperfect, Interrupted).' 
-                    : 'Identify 3-chord cadences and complex inversion positions.'}
-                </p>
-              </div>
-            </button>
+  {/* Cadence Training Card (Available for 6, 7, 8) */}
+  <button 
+    onClick={() => setCurrentView('cadences')} 
+    style={{ ...styles.menuCard, borderLeft: '6px solid #2563eb' }}
+  >
+    <div style={styles.cardIcon}>🎼</div>
+    <div style={styles.cardContent}>
+      <h3 style={styles.cardTitle}>Cadence Progressions</h3>
+      <p style={styles.cardDesc}>
+        {selectedGrade === 6 && 'Identify 2-chord root-position cadences (Perfect or Imperfect).'}
+        {selectedGrade === 7 && 'Identify 2-chord root-position cadences (Perfect, Imperfect, Interrupted).'}
+        {selectedGrade === 8 && 'Identify 3-chord cadences and complex inversion positions.'}
+      </p>
+    </div>
+  </button>
 
-            <button onClick={() => setCurrentView('modulations')} style={{ ...styles.menuCard, borderLeft: '6px solid #d97706' }}>
-              <div style={styles.cardIcon}>🔄</div>
-              <div style={styles.cardContent}>
-                <h3 style={styles.cardTitle}>Modulations</h3>
-                <p style={styles.cardDesc}>
-                  {selectedGrade === 7 
-                    ? 'Track transitions starting from Major keys to Dominant, Subdominant, or Relative Minor.' 
-                    : 'Track advanced Major and minor starting key variations.'}
-                </p>
-              </div>
-            </button>
+  {/* Modulation Training Card (ONLY render if Grade is 7 or 8) */}
+  {(selectedGrade === 7 || selectedGrade === 8) && (
+    <button 
+      onClick={() => setCurrentView('modulations')} 
+      style={{ ...styles.menuCard, borderLeft: '6px solid #d97706' }}
+    >
+      <div style={styles.cardIcon}>🔄</div>
+      <div style={styles.cardContent}>
+        <h3 style={styles.cardTitle}>Modulations</h3>
+        <p style={styles.cardDesc}>
+          {selectedGrade === 7 
+            ? 'Track transitions starting from Major keys to Dominant, Subdominant, or Relative Minor.' 
+            : 'Track advanced Major and minor starting key variations.'}
+        </p>
+      </div>
+    </button>
+  )}
 
-            <button onClick={() => setCurrentView('sandbox')} style={{ ...styles.menuCard, borderLeft: '6px solid #059669' }}>
-              <div style={styles.cardIcon}>🔊</div>
-              <div style={styles.cardContent}>
-                <h3 style={styles.cardTitle}>Audio Reference Sandbox</h3>
-                <p style={styles.cardDesc}>Explore 4-voice chord qualities and animated real-time piano layouts.</p>
-              </div>
-            </button>
-          </div>
+  {/* Audio Sandbox Card (Available for all) */}
+  <button 
+    onClick={() => setCurrentView('sandbox')} 
+    style={{ ...styles.menuCard, borderLeft: '6px solid #059669' }}
+  >
+    <div style={styles.icon || styles.cardIcon}>🔊</div>
+    <div style={styles.cardContent}>
+      <h3 style={styles.cardTitle}>Audio Reference Sandbox</h3>
+      <p style={styles.cardDesc}>Explore 4-voice chord qualities and animated real-time piano layouts.</p>
+    </div>
+  </button>
+</div>
         </div>
       )}
 

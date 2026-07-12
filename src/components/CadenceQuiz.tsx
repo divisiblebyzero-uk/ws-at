@@ -4,7 +4,7 @@ import { playCadenceProgression, playChord, stopAllAudio } from '../utils/audioP
 import * as Tone from 'tone';
 
 interface CadenceQuizProps {
-  grade: number; // Add this line to the interface declaration
+  grade: number;
   onBackToMenu: () => void;
 }
 
@@ -13,26 +13,30 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
   const [question, setQuestion] = useState<GeneratedQuestion | null>(null);
   const [selectedCadence, setSelectedCadence] = useState<string>('');
   
-  // Dynamic initialization array size matching the grade level chords requirement
-  const initialChordsArray = grade === 7 ? Array.of('', '') : Array.of('', '', '');
-  const [selectedChords, setSelectedChords] = useState<string[]>(initialChordsArray);
+  // Safe initial state setup that instantly respects the selected grade level
+  const [selectedChords, setSelectedChords] = useState<string[]>(() => 
+    grade === 6 || grade === 7 ? Array.of('', '') : Array.of('', '', '')
+  );
   
   const [hasChecked, setHasChecked] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [score, setScore] = useState<number>(0);
   const [totalQuestions, setTotalQuestions] = useState<number>(0);
 
+  // Triggered cleanly only when structural dependencies change, preventing infinite loops
   useEffect(() => {
     handleNextQuestion(easyMode);
     return () => stopAllAudio();
-  }, [easyMode]);
+  }, [easyMode, grade]);
 
   const handleNextQuestion = (currentEasyModeSetting: boolean = easyMode) => {
     stopAllAudio();
     const newQuestion = generateQuestion(currentEasyModeSetting, grade);
     setQuestion(newQuestion);
     setSelectedCadence('');
-    setSelectedChords(grade === 7 ? Array.of('', '') : Array.of('', '', ''));
+    
+    // Reset chord fields safely inside an isolated event hook
+    setSelectedChords(grade === 6 || grade === 7 ? Array.of('', '') : Array.of('', '', ''));
     setHasChecked(false);
     setFeedback(null);
   };
@@ -83,24 +87,30 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
 
   if (!question) return <div style={styles.container}>Loading Test Engine...</div>;
 
-  // Update the options array inside the return block to draw exactly 2 or 3 selectors:
-  const chordIndexes: number[] = grade === 7 ? Array.of(0, 1) : Array.of(0, 1, 2);
-  const cadenceOptions = grade === 7 ? ['Perfect', 'Imperfect', 'Interrupted'] : ['Perfect', 'Imperfect', 'Plagal', 'Interrupted'];
-  const grade7ChordsList = ['I', 'IV', 'V', 'V7', 'VI'];
-  const grade8ChordsList = easyMode ? ['I', 'II', 'IV', 'V', 'VI'] : ['I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI'];
-  const activeChordsList = grade === 7 ? grade7ChordsList : grade8ChordsList;
+  // Options configuration sets mapped safely as simple local template variables
+  const chordIndexes: number[] = grade === 6 || grade === 7 ? Array.of(0, 1) : Array.of(0, 1, 2);
   
+  const cadenceOptions = grade === 6 
+    ? Array.of('Perfect', 'Imperfect') 
+    : grade === 7 
+      ? Array.of('Perfect', 'Imperfect', 'Interrupted') 
+      : Array.of('Perfect', 'Imperfect', 'Plagal', 'Interrupted');
+
+  const grade6And7ChordsList = Array.of('I', 'IV', 'V', 'V7', 'VI');
+  const grade8ChordsList = easyMode 
+    ? Array.of('I', 'II', 'IV', 'V', 'VI') 
+    : Array.of('I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI');
+    
+  const activeChordsList = grade === 6 || grade === 7 ? grade6And7ChordsList : grade8ChordsList;
 
   return (
     <div style={styles.container}>
-      {/* Header Bar */}
       <div style={styles.header}>
         <button onClick={onBackToMenu} style={styles.backBtn}>← Menu</button>
-        <h2 style={styles.title}>Cadence Quiz (Grade 8)</h2>
+        <h2 style={styles.title}>Cadence Quiz (Grade {grade})</h2>
         <div style={styles.score}>Score: {score}/{totalQuestions}</div>
       </div>
 
-      {/* Dynamic Toggle Row for Easy Mode for Grade 8 */}
       {grade === 8 && (
         <div style={styles.toggleRow}>
           <span style={styles.toggleLabel}>🎹 Easy Mode (Root Chords Only)</span>
@@ -113,7 +123,6 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
         </div>
       )}
 
-      {/* Main Control Panel Card */}
       <div style={styles.card}>
         <h3 style={styles.subtitle}>Current Key: {question.key.name} {question.key.type}</h3>
         
@@ -125,14 +134,15 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
         <div style={styles.individualPlaySection}>
           <p style={styles.sectionLabel}>Play Individual Chords:</p>
           <div style={styles.row}>
-            <button onClick={() => handlePlayIndividualChord(0)} style={styles.smallAudioBtn}>Chord 1</button>
-            <button onClick={() => handlePlayIndividualChord(1)} style={styles.smallAudioBtn}>Chord 2</button>
-            <button onClick={() => handlePlayIndividualChord(2)} style={styles.smallAudioBtn}>Chord 3</button>
+            {chordIndexes.map((idx: number) => (
+              <button key={idx} onClick={() => handlePlayIndividualChord(idx)} style={styles.smallAudioBtn}>
+                Chord {idx + 1}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Input Choices Form Panel */}
       <div style={styles.card}>
         <h4 style={styles.inputTitle}>1. Identify the Cadence Type</h4>
         <div style={styles.grid}>
@@ -152,22 +162,24 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
           ))}
         </div>
 
-        <h4 style={styles.inputTitle}>2. Identify the Three Chords</h4>
+        <h4 style={styles.inputTitle}>2. Identify the Chords</h4>
         <div style={styles.chordSelectorsRow}>
-            {chordIndexes.map((chordIdx: number) => (
-              <div key={chordIdx} style={styles.chordCol}>
-                <label style={styles.chordLabel}>Chord {chordIdx + 1}</label>
-                <select
-                  value={selectedChords[chordIdx]}
-                  onChange={(e) => handleChordSelection(chordIdx, e.target.value)}
-                  disabled={hasChecked}
-                  style={styles.dropdown}
-                >
-                  <option value="">...</option>
-                  {activeChordsList.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            ))}
+          {chordIndexes.map((chordIdx: number) => (
+            <div key={chordIdx} style={styles.chordCol}>
+              <label style={styles.chordLabel}>Chord {chordIdx + 1}</label>
+              <select
+                value={selectedChords[chordIdx] || ''}
+                onChange={(e) => handleChordSelection(chordIdx, e.target.value)}
+                disabled={hasChecked}
+                style={styles.dropdown}
+              >
+                <option value="">...</option>
+                {activeChordsList.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          ))}
         </div>
 
         {!hasChecked ? (
@@ -197,7 +209,6 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
     </div>
   );
 };
-
 const styles: Record<string, React.CSSProperties> = {
   container: { padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },

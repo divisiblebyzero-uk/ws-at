@@ -78,20 +78,21 @@ export function generateQuestion(forceRootPosition: boolean = false, grade: numb
 
   let cadenceKeys = Object.keys(CADENCE_TYPES) as CadenceName[];
   
-  // Grade 7 Rule: Strip out PLAGAL cadences completely
-  if (grade === 7) {
+  // Grade 6 Rule: Strip out PLAGAL and INTERRUPTED cadences completely
+  if (grade === 6) {
+    cadenceKeys = cadenceKeys.filter(k => k !== 'PLAGAL' && k !== 'INTERRUPTED');
+  } else if (grade === 7) {
     cadenceKeys = cadenceKeys.filter(k => k !== 'PLAGAL');
   }
 
   const randomCadenceKey = cadenceKeys[Math.floor(Math.random() * cadenceKeys.length)];
   const cadenceFormula = CADENCE_TYPES[randomCadenceKey];
 
-  // Filter possible chord options based on Grade level parameters
   let finalChordsList = cadenceFormula.finalChords;
   let precedingChordsList = cadenceFormula.allowedPreceding;
   
-  if (grade === 7) {
-    // Grade 7 Rule: Enforce only root position resolutions (no b or c suffixes)
+  // Grade 6 & 7 Rule: Enforce only root position resolutions (no b or c suffixes)
+  if (grade === 6 || grade === 7) {
     finalChordsList = finalChordsList.filter(c => !c.endsWith('b') && !c.endsWith('c'));
     precedingChordsList = precedingChordsList.filter(c => !c.endsWith('b') && !c.endsWith('c') && c !== 'II');
   }
@@ -99,18 +100,17 @@ export function generateQuestion(forceRootPosition: boolean = false, grade: numb
   const finalChord = finalChordsList[Math.floor(Math.random() * finalChordsList.length)];
   const precedingChord = precedingChordsList[Math.floor(Math.random() * precedingChordsList.length)];
   
-  // Grade 7 Rule: Generate exactly a 2-chord sequence instead of 3
-  let selectedProgression = grade === 7 
+  // Grade 6 & 7 Rule: Generate exactly a 2-chord sequence instead of 3
+  let selectedProgression = (grade === 6 || grade === 7)
     ? Array.of(precedingChord, finalChord)
     : Array.of('I', precedingChord, finalChord);
 
-  // Force pure root alignment if easy mode or Grade 7 properties are flagged
-  const effectiveRootPositionFlag = forceRootPosition || grade === 7;
+  const effectiveRootPositionFlag = forceRootPosition || grade === 6 || grade === 7;
 
   if (effectiveRootPositionFlag) {
     selectedProgression = selectedProgression.map(sym => {
       if (sym.startsWith('V7')) return 'V7';
-      if (sym.startsWith('VI')) return 'VI'; // Checked first to stop V from capturing it
+      if (sym.startsWith('VI')) return 'VI'; 
       if (sym.startsWith('V')) return 'V';
       if (sym.startsWith('I')) return 'I';
       if (sym.startsWith('II')) return 'II';
