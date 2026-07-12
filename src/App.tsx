@@ -106,7 +106,20 @@ export const App: React.FC = () => {
       {currentView === 'cadences' && <CadenceQuiz grade={selectedGrade} onBackToMenu={() => setCurrentView('grade-dashboard')} />}
       {currentView === 'modulations' && <ModulationQuiz grade={selectedGrade} onBackToMenu={() => setCurrentView('grade-dashboard')} />}
       {currentView === 'sandbox' && <AudioSandbox onBackToMenu={() => setCurrentView('grade-dashboard')} />}
+
+        {/* Place this at the bottom of your container block inside src/App.tsx */}
+<p style={{ 
+  fontSize: '11px', 
+  color: '#9ca3af', 
+  textAlign: 'center', 
+  marginTop: '32px', 
+  lineHeight: '1.4' 
+}}>
+  This app is an independent educational tool and is not affiliated with or endorsed by ABRSM.
+</p>
     </div>
+
+    
   );
 };
 

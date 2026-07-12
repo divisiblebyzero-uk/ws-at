@@ -1,3 +1,43 @@
+# Divisible By Zero Audio Trainer
+
+Master ABRSM Grade 7 & 8 aural tests with a professional piano chord simulator.
+
+Accelerate your path to advanced music examination success with the Divisible By Zero Aural Trainer. Designed specifically for students, musicians, and teachers preparing for advanced aural exams, this tool delivers rigorous, procedurally accurate training for ABRSM Grade 7 and Grade 8 aural parameters.
+
+Unlike generic ear-training apps that play simple synth beeps, our app uses a premium grand piano sampler asset bank. It delivers rich, realistic 4-part SATB harmony configurations exactly like a live examiner sitting at a studio upright.
+
+The app runs 100% offline, requires zero special device permissions, and features a zero-data tracking architecture—giving you a fast, distraction-free environment to train your ear anywhere, anytime.
+
+---
+
+🚀 COMPLETE SYLLABUS-ALIGNED MODULES:
+
+• CADENCE PROGRESSIONS (GRADES 7 & 8)
+- Grade 7: Master 2-chord root-position progressions. Correctly identify Perfect, Imperfect, and Interrupted models and their underlying Roman numerals (I, IV, V, V7, VI).
+- Grade 8: Tackle full 3-chord phrases with advanced inversions. Test your capacity to identify positions including Tonic (Root, b, c), Supertonic (Root, b), Subdominant, Dominant (Root, b, c), Dominant 7th, and Submediant.
+- Features an alternative "Easy Mode" for Grade 8 to isolate root-position chords during early study.
+
+• MODULATION TRACKING (GRADES 7 & 8)
+- Grade 7: Trace modulations starting from a Major key out to the Dominant, Subdominant, or Relative Minor.
+- Grade 8: Train your pitch memory against both Major and minor starting keys as passages transition seamlessly across structural target scales.
+
+• INTERACTIVE AUDIO REFERENCE SANDBOX
+- Explore and compare chord qualities at your own pace.
+- Select any global scale center (Major or Harmonic Minor).
+- Tap independent buttons to analyze individual inversions or entire cadence families.
+- Features an integrated 3-octave visual keyboard display that flashes active MIDI keys in real-time, helping you map what you hear directly onto the piano.
+
+---
+
+🔒 PRIVACY & OPEN SOURCE INTEGRITY:
+- 100% Offline Practice: No cellular data or Wi-Fi required.
+- Zero Data Tracking: We do not collect, monitor, store, or transmit your personal data or telemetry metrics.
+- Open Source: Built for the community. The full source code is publicly hosted under the AGPL-3.0 license.
+
+Simplify your practical ear training and build absolute harmonic confidence. Developed by Divisible By Zero.
+
+DISCLAIMER: This application is an independent educational training utility designed to help students prepare for practical music examinations. It is completely unofficial and is not endorsed by, directly affiliated with, or sponsored by the Associated Board of the Royal Schools of Music (ABRSM). All syllabus references, grade terms, and musical test guidelines are utilized strictly for educational, descriptive, and reference purposes.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
