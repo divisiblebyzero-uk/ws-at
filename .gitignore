@@ -23,3 +23,13 @@ android/build/
 # Ignore the web asset mirroring directory 
 # (Capacitor rebuilds this automatically when you run npx cap sync)
 android/app/src/main/assets/public/
+
+# =========================================================================
+# 🔑 Android Keystore & Secret Protection
+# =========================================================================
+# Block your private signing certificate key file
+*.jks
+
+# Block local development environment property paths
+local.properties
+.device_store

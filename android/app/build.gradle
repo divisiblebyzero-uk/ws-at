@@ -16,10 +16,30 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            // Load the local properties file into memory dynamically
+            def localProps = new Properties()
+            def localPropsFile = rootProject.file('local.properties')
+            if (localPropsFile.exists()) {
+                localPropsFile.withReader('UTF-8') { reader ->
+                    localProps.load(reader)
+                }
+            }
+
+            storeFile file("../../divisible-aural-key.jks")
+            
+            // Inject the hidden local variable values
+            storePassword localProps['divisible.storePassword']
+            keyAlias localProps['divisible.keyAlias']
+            keyPassword localProps['divisible.keyPassword']
+        }
+    }
     buildTypes {
         release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
