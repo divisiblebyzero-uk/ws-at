@@ -1,4 +1,5 @@
 import * as Tone from 'tone';
+import { type ScheduledNote } from './modulationGenerator';
 
 // Initialize a premium multi-sampled Grand Piano mapping
 // Tone.Sampler stretches these core notes to generate the entire keyboard seamlessly
@@ -99,3 +100,44 @@ export function stopAllAudio(): void {
   transport.cancel();
   piano.releaseAll();
 }
+
+export const playAdvancedModulationPassage = (passage: ScheduledNote[]) => {
+  stopAllAudio();
+
+  // 1. Translate Tone.js musical bars ("0:0:0") into microsecond timeouts
+  // 1 beat at 120BPM = 500ms
+  const timeMap: Record<string, number> = {
+    "0:0:0": 0,
+    "0:1:0": 500,
+    "0:2:0": 1000,
+    "0:3:0": 1500,
+    "1:0:0": 2000,
+    "1:1:0": 2500,
+    "1:2:0": 3000,
+    "1:3:0": 3500,
+    "2:0:0": 4000,
+    "2:1:0": 4500, // Trigger point for the extra walking bass step notes
+    "2:2:0": 5000,
+    "2:3:0": 5500,
+    "3:0:0": 6000
+  };
+
+  const activeTimeouts: number[] = [];
+
+  // 2. Loop through every single scheduled voice note independently
+  passage.forEach((item) => {
+    const delay = timeMap[item.time] ?? 0;
+    
+    const timeoutId = window.setTimeout(() => {
+      // FIX: Bypass playChord block collapsing! 
+      // Convert the letter string (e.g. "C4") into a direct raw MIDI integer value
+      const rawMidi = Tone.Midi(item.note).toMidi();
+      
+      // Fire the note completely on its own independent audio voice path channel
+      playChord([rawMidi], item.duration);
+    }, delay);
+
+    activeTimeouts.push(timeoutId);
+  });
+};
+

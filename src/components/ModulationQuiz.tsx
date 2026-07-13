@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { generateModulationQuestion, type ModulationQuestion } from '../utils/modulationGenerator';
-import { playCadenceProgression, playChord, stopAllAudio } from '../utils/audioPlayer';
+import { generateAdvancedModulation, type AdvancedModulationQuestion } from '../utils/modulationGenerator';
+import { playAdvancedModulationPassage, playChord, stopAllAudio } from '../utils/audioPlayer';
 import * as Tone from 'tone';
 
 interface ModulationQuizProps {
@@ -10,7 +10,7 @@ interface ModulationQuizProps {
 
 export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToMenu }) => {
   const [phase, setPhase] = useState<'majorStart' | 'minorStart'>('majorStart');
-  const [question, setQuestion] = useState<ModulationQuestion | null>(null);
+const [question, setQuestion] = useState<AdvancedModulationQuestion | null>(null);
   const [selectedGuess, setSelectedGuess] = useState<string>('');
   const [hasChecked, setHasChecked] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -26,20 +26,19 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToM
     return () => stopAllAudio();
   }, [phase]);
 
-  const loadNewQuestion = () => {
-    stopAllAudio();
-    setQuestion(generateModulationQuestion(phase));
-    setSelectedGuess('');
-    setHasChecked(false);
-    setFeedback(null);
-  };
+const loadNewQuestion = () => {
+  stopAllAudio();
+  setQuestion(generateAdvancedModulation(phase));
+  setSelectedGuess('');
+  setHasChecked(false);
+  setFeedback(null);
+};
 
-  const handlePlayFullPassage = async () => {
-    if (!question) return;
-    await Tone.getContext().resume();
-    // Reuses our cadence playback system to play Key-Chord followed by the 4-chord sequence
-    playCadenceProgression(question.keyChordMidi, question.passageMidi);
-  };
+const handlePlayFullPassage = async () => {
+  if (!question) return;
+  // Triggers the real-time fluid chorale player!
+  playAdvancedModulationPassage(question.passageNotes);
+};
 
   const handlePlayKeyChord = async () => {
     if (!question) return;
