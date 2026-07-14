@@ -12,12 +12,12 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
   const [easyMode, setEasyMode] = useState<boolean>(false);
   const [question, setQuestion] = useState<GeneratedQuestion | null>(null);
   const [selectedCadence, setSelectedCadence] = useState<string>('');
-  
+
   // Safe initial state setup that instantly respects the selected grade level
-  const [selectedChords, setSelectedChords] = useState<string[]>(() => 
+  const [selectedChords, setSelectedChords] = useState<string[]>(() =>
     grade === 6 || grade === 7 ? Array.of('', '') : Array.of('', '', '')
   );
-  
+
   const [hasChecked, setHasChecked] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ isCorrect: boolean; message: string } | null>(null);
   const [score, setScore] = useState<number>(0);
@@ -34,7 +34,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
     const newQuestion = generateQuestion(currentEasyModeSetting, grade);
     setQuestion(newQuestion);
     setSelectedCadence('');
-    
+
     // Reset chord fields safely inside an isolated event hook
     setSelectedChords(grade === 6 || grade === 7 ? Array.of('', '') : Array.of('', '', ''));
     setHasChecked(false);
@@ -89,24 +89,34 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
 
   // Options configuration sets mapped safely as simple local template variables
   const chordIndexes: number[] = grade === 6 || grade === 7 ? Array.of(0, 1) : Array.of(0, 1, 2);
-  
-  const cadenceOptions = grade === 6 
-    ? Array.of('Perfect', 'Imperfect') 
-    : grade === 7 
-      ? Array.of('Perfect', 'Imperfect', 'Interrupted') 
+
+  const cadenceOptions = grade === 6
+    ? Array.of('Perfect', 'Imperfect')
+    : grade === 7
+      ? Array.of('Perfect', 'Imperfect', 'Interrupted')
       : Array.of('Perfect', 'Imperfect', 'Plagal', 'Interrupted');
 
   const grade6And7ChordsList = Array.of('I', 'IV', 'V', 'V7', 'VI');
-  const grade8ChordsList = easyMode 
-    ? Array.of('I', 'II', 'IV', 'V', 'VI') 
+  const grade8ChordsList = easyMode
+    ? Array.of('I', 'II', 'IV', 'V', 'VI')
     : Array.of('I', 'Ib', 'Ic', 'II', 'IIb', 'IV', 'V', 'Vb', 'Vc', 'V7', 'VI');
-    
+
   const activeChordsList = grade === 6 || grade === 7 ? grade6And7ChordsList : grade8ChordsList;
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <button onClick={onBackToMenu} style={styles.backBtn}>← Menu</button>
+        <button
+          type="button" // Fixes mobile click tracking bubbles
+          onClick={(e) => {
+            e.preventDefault(); // Blocks event bubbling to Android OS
+            stopAllAudio();
+            onBackToMenu();
+          }}
+          style={styles.backBtn}
+        >
+          ← Menu
+        </button>
         <h2 style={styles.title}>Cadence Quiz (Grade {grade})</h2>
         <div style={styles.score}>Score: {score}/{totalQuestions}</div>
       </div>
@@ -114,9 +124,9 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
       {grade === 8 && (
         <div style={styles.toggleRow}>
           <span style={styles.toggleLabel}>🎹 Easy Mode (Root Chords Only)</span>
-          <input 
-            type="checkbox" 
-            checked={easyMode} 
+          <input
+            type="checkbox"
+            checked={easyMode}
             onChange={(e) => setEasyMode(e.target.checked)}
             style={styles.checkboxInput}
           />
@@ -125,7 +135,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
 
       <div style={styles.card}>
         <h3 style={styles.subtitle}>Current Key: {question.key.name} {question.key.type}</h3>
-        
+
         <div style={styles.buttonGroup}>
           <button onClick={handlePlayKeyChordOnly} style={styles.audioBtn}>🎹 Play Key-Chord</button>
           <button onClick={handlePlayFullProgression} style={styles.primaryAudioBtn}>▶ Play Full Sequence</button>
@@ -183,9 +193,9 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
         </div>
 
         {!hasChecked ? (
-          <button 
-            onClick={handleCheckAnswer} 
-            disabled={!selectedCadence || selectedChords.some(c => c === '')} 
+          <button
+            onClick={handleCheckAnswer}
+            disabled={!selectedCadence || selectedChords.some(c => c === '')}
             style={styles.actionBtn}
           >
             Submit Answer
@@ -217,15 +227,15 @@ const styles: Record<string, React.CSSProperties> = {
   score: { fontSize: '14px', background: '#e5e7eb', color: '#1f2937', padding: '4px 8px', borderRadius: '4px' },
   card: { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
   subtitle: { margin: '0 0 16px 0', fontSize: '16px', textAlign: 'center', color: '#1f2937' },
-    toggleRow: { 
-    display: 'flex', 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    background: '#fef3c7', 
-    border: '1px solid #fde68a', 
-    padding: '12px 16px', 
-    borderRadius: '8px', 
+  toggleRow: {
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    background: '#fef3c7',
+    border: '1px solid #fde68a',
+    padding: '12px 16px',
+    borderRadius: '8px',
     marginBottom: '14px',
     boxSizing: 'border-box',
     width: '100%'
@@ -233,16 +243,16 @@ const styles: Record<string, React.CSSProperties> = {
   toggleLabel: { fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' },
   buttonGroup: { display: 'flex', gap: '12px', marginBottom: '16px' },
 
-  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#ffffff', color: '#1f2937', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }, 
-  primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#ffffff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' }, 
-  individualPlaySection: { borderTop: '1px solid #f3f4f6', paddingTop: '12px' }, sectionLabel: { margin: '0 0 8px 0', fontSize: '13px', color: '#6b7280' }, 
-  row: { display: 'flex', gap: '8px' }, 
-  smallAudioBtn: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', color: '#374151', fontSize: '12px', cursor: 'pointer' }, 
-  inputTitle: { fontSize: '14px', margin: '0 0 10px 0', color: '#374151', fontWeight: '600' }, grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }, 
-  selectorBtn: { padding: '12px', border: 'none', borderRadius: '6px', fontWeight: '500', fontSize: '14px', cursor: 'pointer' }, chordSelectorsRow: { display: 'flex', gap: '12px', marginBottom: '24px' }, 
-  chordCol: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }, chordLabel: { fontSize: '12px', color: '#6b7280' }, 
-  dropdown: { padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', background: '#ffffff', color: '#1f2937' }, 
-  actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#2563eb', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }, 
-  nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' }, 
+  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#ffffff', color: '#1f2937', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
+  primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#ffffff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
+  individualPlaySection: { borderTop: '1px solid #f3f4f6', paddingTop: '12px' }, sectionLabel: { margin: '0 0 8px 0', fontSize: '13px', color: '#6b7280' },
+  row: { display: 'flex', gap: '8px' },
+  smallAudioBtn: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', color: '#374151', fontSize: '12px', cursor: 'pointer' },
+  inputTitle: { fontSize: '14px', margin: '0 0 10px 0', color: '#374151', fontWeight: '600' }, grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' },
+  selectorBtn: { padding: '12px', border: 'none', borderRadius: '6px', fontWeight: '500', fontSize: '14px', cursor: 'pointer' }, chordSelectorsRow: { display: 'flex', gap: '12px', marginBottom: '24px' },
+  chordCol: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }, chordLabel: { fontSize: '12px', color: '#6b7280' },
+  dropdown: { padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', background: '#ffffff', color: '#1f2937' },
+  actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#2563eb', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },
+  nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },
   feedbackBanner: { padding: '14px', borderRadius: '6px', fontSize: '14px', fontWeight: '500', lineHeight: '1.4', textAlign: 'center' }
 };

@@ -10,14 +10,14 @@ interface ModulationQuizProps {
 
 export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToMenu }) => {
   const [phase, setPhase] = useState<'majorStart' | 'minorStart'>('majorStart');
-const [question, setQuestion] = useState<AdvancedModulationQuestion | null>(null);
+  const [question, setQuestion] = useState<AdvancedModulationQuestion | null>(null);
   const [selectedGuess, setSelectedGuess] = useState<string>('');
   const [hasChecked, setHasChecked] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (grade === 7) {
-        setPhase('majorStart');
+      setPhase('majorStart');
     }
   }, [grade]);
 
@@ -26,19 +26,19 @@ const [question, setQuestion] = useState<AdvancedModulationQuestion | null>(null
     return () => stopAllAudio();
   }, [phase]);
 
-const loadNewQuestion = () => {
-  stopAllAudio();
-  setQuestion(generateAdvancedModulation(phase));
-  setSelectedGuess('');
-  setHasChecked(false);
-  setFeedback(null);
-};
+  const loadNewQuestion = () => {
+    stopAllAudio();
+    setQuestion(generateAdvancedModulation(phase));
+    setSelectedGuess('');
+    setHasChecked(false);
+    setFeedback(null);
+  };
 
-const handlePlayFullPassage = async () => {
-  if (!question) return;
-  // Triggers the real-time fluid chorale player!
-  playAdvancedModulationPassage(question.passageNotes);
-};
+  const handlePlayFullPassage = async () => {
+    if (!question) return;
+    // Triggers the real-time fluid chorale player!
+    playAdvancedModulationPassage(question.passageNotes);
+  };
 
   const handlePlayKeyChord = async () => {
     if (!question) return;
@@ -49,7 +49,7 @@ const handlePlayFullPassage = async () => {
   const handleVerifyAnswer = () => {
     if (!question) return;
     const isCorrect = selectedGuess.toLowerCase() === question.targetModulation.name.toLowerCase();
-    
+
     if (isCorrect) {
       setFeedback(`✅ Correct! The passage modulated cleanly to the ${question.targetModulation.name} (${question.targetKeyName} ${question.targetModulation.type}).`);
     } else {
@@ -59,7 +59,7 @@ const handlePlayFullPassage = async () => {
   };
 
   const handleNextPhase = () => {
-     if (grade === 7) {
+    if (grade === 7) {
       loadNewQuestion(); // Grade 7 rule: Bypass minor start, cycle straight to next Major question
       return;
     }
@@ -72,14 +72,24 @@ const handlePlayFullPassage = async () => {
 
   if (!question) return <div style={styles.container}>Loading Modulation Engine...</div>;
 
-  const options = phase === 'majorStart' 
-    ? ['Dominant', 'Subdominant', 'Relative Minor'] 
+  const options = phase === 'majorStart'
+    ? ['Dominant', 'Subdominant', 'Relative Minor']
     : ['Dominant', 'Subdominant', 'Relative Major'];
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <button onClick={onBackToMenu} style={styles.backBtn}>← Menu</button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            stopAllAudio();
+            onBackToMenu();
+          }}
+          style={styles.backBtn}
+        >
+          ← Menu
+        </button>
         <h2 style={styles.title}>Modulation Trainer (Grade {grade})</h2>
         <div style={styles.phaseBadge}>{phase === 'majorStart' ? 'Test 1: Major Start' : 'Test 2: Minor Start'}</div>
       </div>

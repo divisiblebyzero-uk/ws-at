@@ -23,7 +23,7 @@ export const AudioSandbox: React.FC<AudioSandboxProps> = ({ onBackToMenu }) => {
   }, [activeTimeoutIds]);
 
   const handlePlayChordType = (symbol: string) => {
-    if (isAudioPlaying) return; 
+    if (isAudioPlaying) return;
     setIsAudioPlaying(true);
     stopAllAudio();
 
@@ -38,10 +38,10 @@ export const AudioSandbox: React.FC<AudioSandboxProps> = ({ onBackToMenu }) => {
     const offsetsArray = selectedType === 'major' ? formula.structureMajor : formula.structureMinor;
     const notes = clampSandboxNotes(offsetsArray.map((offset: number) => keyCenterMidi + offset));
     const identities = getFunctionalChordLabel(symbol, selectedType, selectedKey);
-    
+
     setPlayingChordLabel(`Active: ${identities.literalName} [ ${notes.map(midiToNoteName).join(', ')} ]`);
     playChord(notes, '1.5n');
-    
+
     const tId = window.setTimeout(() => setIsAudioPlaying(false), 1500);
     setActiveTimeoutIds(prev => [...prev, tId]);
   };
@@ -53,10 +53,10 @@ export const AudioSandbox: React.FC<AudioSandboxProps> = ({ onBackToMenu }) => {
 
     const offsets: Record<string, number> = { 'C': 0, 'G': 7, 'D': 2, 'A': 9, 'F': 5, 'Bb': 10, 'Eb': 3 };
     const keyCenterMidi = 60 + (offsets[selectedKey] || 0);
-    
+
     // 1. Build the full structural cadence parameters from our math engine wrapper
     const data = buildCadenceProgressionData(cadenceKey, keyCenterMidi, selectedType);
-    
+
     const sym1 = data.progression.at(0) || 'I';
     const sym2 = data.progression.at(1) || 'V';
     const sym3 = data.progression.at(2) || 'I';
@@ -99,7 +99,7 @@ export const AudioSandbox: React.FC<AudioSandboxProps> = ({ onBackToMenu }) => {
     // Pulse 5: Release interface locks completely (at 7800ms)
     const tEnd = window.setTimeout(() => {
       setPlayingChordLabel(`Finished playing ${data.formula.name} cadence layout loop.`);
-      setIsAudioPlaying(false); 
+      setIsAudioPlaying(false);
     }, 7800);
     newTimeouts.push(tEnd);
 
@@ -117,7 +117,17 @@ export const AudioSandbox: React.FC<AudioSandboxProps> = ({ onBackToMenu }) => {
   return (
     <div style={styles.container}>
       <div style={styles.compactHeaderRow}>
-        <button onClick={onBackToMenu} style={styles.backBtn}>← Menu</button>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            stopAllAudio();
+            onBackToMenu();
+          }}
+          style={styles.backBtn}
+        >
+          ← Menu
+        </button>
         <button onClick={() => setShowSelectorPanel(!showSelectorPanel)} style={styles.keyContextPill}>
           🔑 Key: <span style={styles.pillHighlightText}>{selectedKey} {selectedType === 'major' ? 'Maj' : 'Min'}</span> ▾
         </button>
