@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { playCadenceProgression, playChord, stopAllAudio } from '../utils/audioPlayer';
+import { playChord, stopAllAudio } from '../utils/audioPlayer';
 import { ALLOWED_CHORDS, type CadenceName, type KeyType } from '../constants/musicTheory';
 import { clampSandboxNotes, midiToNoteName, getFunctionalChordLabel, buildCadenceProgressionData } from '../utils/sandboxEngine';
 
