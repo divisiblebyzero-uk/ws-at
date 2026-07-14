@@ -38,13 +38,6 @@ function restrictToOctaveRange(notesArray: number[]): number[] {
 }
 
 /**
- * Gets absolute MIDI base offsets relative to a central octave point
- */
-function getKeyCenterMidi(keyName: string): number {
-  return 60 + NOTE_OFFSETS[keyName];
-}
-
-/**
  * Dynamically builds a single chord from semitone offsets and clamps it inside the target range
  */
 function buildChordMidi(chordSymbol: string, keyCenterMidi: number, keyType: 'major' | 'minor', forceRootPosition: boolean): number[] {
@@ -74,37 +67,57 @@ function buildChordMidi(chordSymbol: string, keyCenterMidi: number, keyType: 'ma
  */
 export function generateQuestion(forceRootPosition: boolean = false, grade: number = 8): GeneratedQuestion {
   const randomKey = AVAILABLE_KEYS[Math.floor(Math.random() * AVAILABLE_KEYS.length)];
-  const keyCenterMidi = getKeyCenterMidi(randomKey.name);
+  const keyCenterMidi = 60 + NOTE_OFFSETS[randomKey.name];
 
-  let cadenceKeys = Object.keys(CADENCE_TYPES) as CadenceName[];
-  
-  // Grade 6 Rule: Strip out PLAGAL and INTERRUPTED cadences completely
+  let selectedCadenceType = '';
+  let selectedProgression: string[] = [];
+
+  // --- FIX: Explicit isolation paths for Grade 6 to completely prevent randomizer loop hijacking ---
   if (grade === 6) {
-    cadenceKeys = cadenceKeys.filter(k => k !== 'PLAGAL' && k !== 'INTERRUPTED');
-  } else if (grade === 7) {
-    cadenceKeys = cadenceKeys.filter(k => k !== 'PLAGAL');
+    // Grade 6: 50% chance for Perfect (V -> I) or Imperfect (I -> V or IV -> V)
+    const isPerfect = Math.random() > 0.5;
+    
+    if (isPerfect) {
+      selectedCadenceType = 'Perfect';
+      selectedProgression = Array.of('V', 'I');
+    } else {
+      selectedCadenceType = 'Imperfect';
+      // Alternate between the two most common root forms of imperfect cadences
+      selectedProgression = Math.random() > 0.5 ? Array.of('I', 'V') : Array.of('IV', 'V');
+    }
+  } 
+  else if (grade === 7) {
+    // Grade 7: Perfect (V->I), Imperfect (I/IV->V), or Interrupted (V->VI)
+    const rand = Math.random();
+    if (rand < 0.34) {
+      selectedCadenceType = 'Perfect';
+      selectedProgression = Array.of('V', 'I');
+    } else if (rand < 0.67) {
+      selectedCadenceType = 'Imperfect';
+      selectedProgression = Math.random() > 0.5 ? Array.of('I', 'V') : Array.of('IV', 'V');
+    } else {
+      selectedCadenceType = 'Interrupted';
+      selectedProgression = Array.of('V', 'VI');
+    }
+  } 
+  else {
+    // Grade 8: Advanced open fallback framework tracking all inversions
+    let cadenceKeys = Object.keys(CADENCE_TYPES) as CadenceName[];
+    const randomCadenceKey = cadenceKeys[Math.floor(Math.random() * cadenceKeys.length)];
+    const cadenceFormula = CADENCE_TYPES[randomCadenceKey];
+    
+    selectedCadenceType = cadenceFormula.name;
+    const finalChord = cadenceFormula.finalChords[Math.floor(Math.random() * cadenceFormula.finalChords.length)];
+    const precedingChord = cadenceFormula.allowedPreceding[Math.floor(Math.random() * cadenceFormula.allowedPreceding.length)];
+    
+    const openingChords = ['I', 'Ib', 'IV'];
+    const validOpeners = openingChords.filter((c: string) => c !== precedingChord); 
+    const openingChord = validOpeners[Math.floor(Math.random() * validOpeners.length)];
+    
+    selectedProgression = Array.of(openingChord, precedingChord, finalChord);
   }
 
-  const randomCadenceKey = cadenceKeys[Math.floor(Math.random() * cadenceKeys.length)];
-  const cadenceFormula = CADENCE_TYPES[randomCadenceKey];
-
-  let finalChordsList = cadenceFormula.finalChords;
-  let precedingChordsList = cadenceFormula.allowedPreceding;
-  
-  // Grade 6 & 7 Rule: Enforce only root position resolutions (no b or c suffixes)
-  if (grade === 6 || grade === 7) {
-    finalChordsList = finalChordsList.filter(c => !c.endsWith('b') && !c.endsWith('c'));
-    precedingChordsList = precedingChordsList.filter(c => !c.endsWith('b') && !c.endsWith('c') && c !== 'II');
-  }
-
-  const finalChord = finalChordsList[Math.floor(Math.random() * finalChordsList.length)];
-  const precedingChord = precedingChordsList[Math.floor(Math.random() * precedingChordsList.length)];
-  
-  // Grade 6 & 7 Rule: Generate exactly a 2-chord sequence instead of 3
-  let selectedProgression = (grade === 6 || grade === 7)
-    ? Array.of(precedingChord, finalChord)
-    : Array.of('I', precedingChord, finalChord);
-
+  // Enforce root positioning clean-ups 
   const effectiveRootPositionFlag = forceRootPosition || grade === 6 || grade === 7;
 
   if (effectiveRootPositionFlag) {
@@ -126,7 +139,7 @@ export function generateQuestion(forceRootPosition: boolean = false, grade: numb
 
   return {
     key: randomKey,
-    cadenceType: cadenceFormula.name,
+    cadenceType: selectedCadenceType,
     chordSymbols: selectedProgression,
     keyChordMidi,
     progressionMidi
