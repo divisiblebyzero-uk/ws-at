@@ -36,6 +36,10 @@ android {
         }
     }
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+            manifestPlaceholders = [appNameSuffix: " (Debug)"]
+        }
         release {
             signingConfig signingConfigs.release
             minifyEnabled true
