@@ -12,6 +12,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
   const [easyMode, setEasyMode] = useState<boolean>(false);
   const [question, setQuestion] = useState<GeneratedQuestion | null>(null);
   const [selectedCadence, setSelectedCadence] = useState<string>('');
+  const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
   // Safe initial state setup that instantly respects the selected grade level
   const [selectedChords, setSelectedChords] = useState<string[]>(() =>
@@ -39,34 +40,57 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
     setSelectedChords(grade === 6 || grade === 7 ? Array.of('', '') : Array.of('', '', ''));
     setHasChecked(false);
     setFeedback(null);
+
   };
 
-  const handlePlayFullProgression = async () => {
-    if (!question) return;
-    await Tone.getContext().resume();
-    playCadenceProgression(question.keyChordMidi, question.progressionMidi);
-  };
+  const handlePlayCadence = async () => {
+    if (isPlaying || !question || !question.progressionMidi) return; 
 
+    try {
+      setIsPlaying(true);
+      await Tone.getContext().resume();
+      
+      // FIX: Pass both the progression array and the single key chord array into the utility
+      await playCadenceProgression(question.progressionMidi, question.keyChordMidi); 
+      
+    } catch (error) {
+      console.error("Cadence midi progression failed to play:", error);
+    } finally {
+      setIsPlaying(false); 
+    }
+  };
+  
   const handlePlayKeyChordOnly = async () => {
-    if (!question) return;
-    await Tone.getContext().resume();
-    playChord(question.keyChordMidi, '1n');
+    if (!question || isPlaying) return;
+    try {
+      setIsPlaying(true);
+      await Tone.getContext().resume();
+      await playChord(question.keyChordMidi, '1n');
+    } finally {
+      setIsPlaying(false);
+    }
   };
 
   const handlePlayIndividualChord = async (index: number) => {
-    if (!question) return;
-    await Tone.getContext().resume();
-    playChord(question.progressionMidi[index], '1n');
+    if (!question || isPlaying) return;
+    try {
+      setIsPlaying(true);
+      await Tone.getContext().resume();
+      await playChord(question.progressionMidi[index], '1n');
+    } finally {
+      setIsPlaying(false);
+    }
   };
 
   const handleChordSelection = (chordIndex: number, val: string) => {
+    if (isPlaying) return; // Prevent altering choices mid-audio
     const updated = [...selectedChords];
     updated[chordIndex] = val;
     setSelectedChords(updated);
   };
 
   const handleCheckAnswer = () => {
-    if (!question) return;
+    if (!question || isPlaying) return;
 
     const cadenceIsCorrect = selectedCadence.toLowerCase() === question.cadenceType.toLowerCase();
     const chordsAreCorrect = selectedChords.every((chord, idx) => chord === question.chordSymbols[idx]);
@@ -103,6 +127,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
 
   const activeChordsList = grade === 6 || grade === 7 ? grade6And7ChordsList : grade8ChordsList;
 
+
   return (
     <div style={styles.container}>
       <div style={styles.header}>
@@ -127,8 +152,13 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
           <input
             type="checkbox"
             checked={easyMode}
+            disabled={isPlaying} // Lock settings when playing
             onChange={(e) => setEasyMode(e.target.checked)}
-            style={styles.checkboxInput}
+            style={{
+              ...styles.checkboxInput,
+              opacity: isPlaying ? 0.5 : 1,
+              cursor: isPlaying ? 'not-allowed' : 'pointer'
+            }}
           />
         </div>
       )}
@@ -137,15 +167,45 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
         <h3 style={styles.subtitle}>Current Key: {question.key.name} {question.key.type}</h3>
 
         <div style={styles.buttonGroup}>
-          <button onClick={handlePlayKeyChordOnly} style={styles.audioBtn}>🎹 Play Key-Chord</button>
-          <button onClick={handlePlayFullProgression} style={styles.primaryAudioBtn}>▶ Play Full Sequence</button>
+          <button 
+            onClick={handlePlayKeyChordOnly} 
+            disabled={isPlaying}
+            style={{
+              ...styles.audioBtn,
+              opacity: isPlaying ? 0.4 : 1,
+              cursor: isPlaying ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {isPlaying ? '⏳ Busy...' : '🎹 Play Key-Chord'}
+          </button>
+          
+          <button 
+            onClick={handlePlayCadence} 
+            disabled={isPlaying}
+            style={{
+              ...styles.primaryAudioBtn,
+              opacity: isPlaying ? 0.4 : 1,
+              cursor: isPlaying ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {isPlaying ? '🔊 Playing Full Sequence...' : '▶ Play Full Sequence'}
+          </button>
         </div>
 
         <div style={styles.individualPlaySection}>
           <p style={styles.sectionLabel}>Play Individual Chords:</p>
           <div style={styles.row}>
             {chordIndexes.map((idx: number) => (
-              <button key={idx} onClick={() => handlePlayIndividualChord(idx)} style={styles.smallAudioBtn}>
+              <button 
+                key={idx} 
+                onClick={() => handlePlayIndividualChord(idx)} 
+                disabled={isPlaying}
+                style={{
+                  ...styles.smallAudioBtn,
+                  opacity: isPlaying ? 0.4 : 1,
+                  cursor: isPlaying ? 'not-allowed' : 'pointer'
+                }}
+              >
                 Chord {idx + 1}
               </button>
             ))}
@@ -159,13 +219,15 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
           {cadenceOptions.map(opt => (
             <button
               key={opt}
-              onClick={() => !hasChecked && setSelectedCadence(opt)}
+              onClick={() => !hasChecked && !isPlaying && setSelectedCadence(opt)}
               style={{
                 ...styles.selectorBtn,
                 backgroundColor: selectedCadence === opt ? '#2563eb' : '#f3f4f6',
-                color: selectedCadence === opt ? '#ffffff' : '#1f2937'
+                color: selectedCadence === opt ? '#ffffff' : '#1f2937',
+                opacity: isPlaying ? 0.4 : 1,
+                cursor: (hasChecked || isPlaying) ? 'not-allowed' : 'pointer'
               }}
-              disabled={hasChecked}
+              disabled={hasChecked || isPlaying}
             >
               {opt}
             </button>
@@ -180,8 +242,12 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
               <select
                 value={selectedChords[chordIdx] || ''}
                 onChange={(e) => handleChordSelection(chordIdx, e.target.value)}
-                disabled={hasChecked}
-                style={styles.dropdown}
+                disabled={hasChecked || isPlaying}
+                style={{
+                  ...styles.dropdown,
+                  opacity: isPlaying ? 0.5 : 1,
+                  cursor: (hasChecked || isPlaying) ? 'not-allowed' : 'default'
+                }}
               >
                 <option value="">...</option>
                 {activeChordsList.map(c => (
@@ -195,13 +261,25 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
         {!hasChecked ? (
           <button
             onClick={handleCheckAnswer}
-            disabled={!selectedCadence || selectedChords.some(c => c === '')}
-            style={styles.actionBtn}
+            disabled={!selectedCadence || selectedChords.some(c => c === '') || isPlaying}
+            style={{
+              ...styles.actionBtn,
+              opacity: (isPlaying || !selectedCadence || selectedChords.some(c => c === '')) ? 0.4 : 1,
+              cursor: (isPlaying || !selectedCadence || selectedChords.some(c => c === '')) ? 'not-allowed' : 'pointer'
+            }}
           >
             Submit Answer
           </button>
         ) : (
-          <button onClick={() => handleNextQuestion(easyMode)} style={styles.nextBtn}>
+          <button 
+            onClick={() => handleNextQuestion(easyMode)} 
+            disabled={isPlaying}
+            style={{
+              ...styles.nextBtn,
+              opacity: isPlaying ? 0.4 : 1,
+              cursor: isPlaying ? 'not-allowed' : 'pointer'
+            }}
+          >
             Next Question →
           </button>
         )}

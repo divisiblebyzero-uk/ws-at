@@ -21,7 +21,6 @@ const piano = new Tone.Sampler({
   release: 1.2,
   // Pulls directly from the official open-source Salamander Grand Piano asset bank
   baseUrl: "/audio/piano/",
-  // baseUrl: "https://tonejs.github.io/audio/salamander/",
   
   onload: () => {
     console.log("🎹 Grand Piano acoustic samples loaded successfully!");
@@ -55,41 +54,61 @@ export function playChord(midiNotes: number[], duration: string = '1n'): void {
 
 /**
  * Core Playback System: Schedules the precise timing blocks for the exam phrase
- * Rule: Play key-chord, pause, then play the 3-chord sequence seamlessly
+ * Rule: Plays each chord in the progression sequentially using Tone.Sampler piano.
+ * Returns a Promise that resolves when the entire sequence finishes playing.
  */
-export function playCadenceProgression(keyChordMidi: number[], progressionMidi: number[][]): void {
-  if (Tone.getContext().state !== 'running') {
-    Tone.getContext().resume();
-  }
+/**
+ * Core Playback System: Schedules the precise timing blocks for the exam phrase
+ * Rule: Plays a reference key-chord, pauses, then plays the progression sequence seamlessly.
+ * Returns a Promise that resolves when everything finishes playing.
+ */
+export const playCadenceProgression = async (
+  progressionMidi: number[][], 
+  keyChordMidi: number[] | null = null,
+  chordDurationMs = 1200
+): Promise<void> => {
+  return new Promise((resolve) => {
+    if (!progressionMidi || progressionMidi.length === 0) {
+      resolve();
+      return;
+    }
 
-  const transport = Tone.getTransport();
-  transport.cancel();
+    if (Tone.getContext().state !== 'running') {
+      Tone.getContext().resume();
+    }
 
-  let timeOffset = 0;
+    // Step 1: Definition of the main progression worker loop
+    let currentIdx = 0;
+    const playNextProgressionChord = () => {
+      if (currentIdx >= progressionMidi.length) {
+        // Wait for the final chord to decay before releasing UI buttons
+        setTimeout(() => resolve(), chordDurationMs);
+        return;
+      }
 
-  // 1. Play the introductory Key-Chord (Holds for 1.8 seconds for a nice decay)
-  transport.schedule((time) => {
-    const notes = keyChordMidi.map(midiToNoteName);
-    piano.triggerAttackRelease(notes, '2n', time);
-  }, timeOffset);
+      const currentChordNotes = progressionMidi[currentIdx];
+      playChord(currentChordNotes, '2n'); // Crisp half-note duration
 
-  // 2. Add an explicit silence gap after the key chord (2.8 seconds total from start)
-  timeOffset += 2.8;
+      currentIdx++;
+      setTimeout(playNextProgressionChord, chordDurationMs);
+    };
 
-  // 3. Play the 3 cadential chords sequentially with rhythmic gaps
-  progressionMidi.forEach((chordMidi) => {
-    transport.schedule((time) => {
-      const notes = chordMidi.map(midiToNoteName);
-      // Give each progression chord a clear, distinct 1.4-second acoustic space
-      piano.triggerAttackRelease(notes, '2n', time);
-    }, timeOffset);
-    
-    // Step forward 1.6 seconds per chord to mimic natural exam pacing
-    timeOffset += 1.6;
+    // Step 2: Play the reference key-chord first if provided
+    if (keyChordMidi && keyChordMidi.length > 0) {
+      playChord(keyChordMidi, '2n');
+
+      // Pause for one full beats block (chordDurationMs) to establish the key center 
+      // before starting the cadence progression
+      setTimeout(() => {
+        playNextProgressionChord();
+      }, chordDurationMs*2);
+    } else {
+      // Fallback: If no key-chord is supplied, drop straight into the progression
+      playNextProgressionChord();
+    }
   });
+};
 
-  transport.start();
-}
 
 /**
  * Force stops any scheduled audio sequences instantly
@@ -140,4 +159,3 @@ export const playAdvancedModulationPassage = (passage: ScheduledNote[]) => {
     activeTimeouts.push(timeoutId);
   });
 };
-

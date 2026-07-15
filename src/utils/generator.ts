@@ -107,15 +107,35 @@ export function generateQuestion(forceRootPosition: boolean = false, grade: numb
     const cadenceFormula = CADENCE_TYPES[randomCadenceKey];
     
     selectedCadenceType = cadenceFormula.name;
-    const finalChord = cadenceFormula.finalChords[Math.floor(Math.random() * cadenceFormula.finalChords.length)];
-    const precedingChord = cadenceFormula.allowedPreceding[Math.floor(Math.random() * cadenceFormula.allowedPreceding.length)];
+
+    // --- FIX: Filter out inverted chords if forceRootPosition (Easy Mode) is true ---
+    let finalChordsPool = cadenceFormula.finalChords;
+    let precedingChordsPool = cadenceFormula.allowedPreceding;
+    let openingChordsPool = ['I', 'Ib', 'IV'];
+
+    if (forceRootPosition) {
+      // Strip any chords containing lowercase inversion modifiers ('b', 'c')
+      finalChordsPool = finalChordsPool.filter((c: string) => !c.includes('b') && !c.includes('c'));
+      precedingChordsPool = precedingChordsPool.filter((c: string) => !c.includes('b') && !c.includes('c'));
+      openingChordsPool = openingChordsPool.filter((c: string) => !c.includes('b') && !c.includes('c'));
+    }
+
+    // Safety Fallbacks: If filtering leaves a pool completely empty, revert to standard root chords
+    if (finalChordsPool.length === 0) finalChordsPool = ['I'];
+    if (precedingChordsPool.length === 0) precedingChordsPool = ['V'];
+
+    const finalChord = finalChordsPool[Math.floor(Math.random() * finalChordsPool.length)];
+    const precedingChord = precedingChordsPool[Math.floor(Math.random() * precedingChordsPool.length)];
     
-    const openingChords = ['I', 'Ib', 'IV'];
-    const validOpeners = openingChords.filter((c: string) => c !== precedingChord); 
-    const openingChord = validOpeners[Math.floor(Math.random() * validOpeners.length)];
+    // Ensure the opening chord is unique and doesn't clone the middle chord
+    const validOpeners = openingChordsPool.filter((c: string) => c !== precedingChord); 
+    // Final defensive check if filtering cleared out options completely
+    const chosenOpeners = validOpeners.length > 0 ? validOpeners : openingChordsPool;
+    const openingChord = chosenOpeners[Math.floor(Math.random() * chosenOpeners.length)];
     
     selectedProgression = Array.of(openingChord, precedingChord, finalChord);
   }
+
 
   // Enforce root positioning clean-ups 
   const effectiveRootPositionFlag = forceRootPosition || grade === 6 || grade === 7;
@@ -125,23 +145,26 @@ export function generateQuestion(forceRootPosition: boolean = false, grade: numb
       if (sym.startsWith('V7')) return 'V7';
       if (sym.startsWith('VI')) return 'VI'; 
       if (sym.startsWith('V')) return 'V';
-      if (sym.startsWith('I')) return 'I';
-      if (sym.startsWith('II')) return 'II';
       if (sym.startsWith('IV')) return 'IV';
+      if (sym.startsWith('II')) return 'II';
+      if (sym.startsWith('I')) return 'I';
       return 'I';
     });
   }
 
   const keyChordMidi = buildChordMidi('I', keyCenterMidi, randomKey.type, false);
-  const progressionMidi = selectedProgression.map((symbol: string) => 
-    buildChordMidi(symbol, keyCenterMidi, randomKey.type, effectiveRootPositionFlag)
-  );
+  
+  // FIX: Map over selectedProgression using buildChordMidi with the correct arguments
+  const progressionMidi = selectedProgression.map((chordSymbol: string) => {
+    return buildChordMidi(chordSymbol, keyCenterMidi, randomKey.type, false); 
+  });
 
+  // 2. Clear out the unused/broken function calls and return the compiled structure cleanly
   return {
     key: randomKey,
     cadenceType: selectedCadenceType,
-    chordSymbols: selectedProgression,
-    keyChordMidi,
-    progressionMidi
+    chordSymbols: selectedProgression, // Controls the text display array ("I — IV — V")
+    progressionMidi,                  // Controls the audio output matrix array
+    keyChordMidi: keyChordMidi         // Uses your local line 155 variable to clear the warning!
   };
 }

@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "test": "vitest run",
     "lint": "oxlint",
     "preview": "vite preview",
-    "phone:deploy": "npm run build && npx cap sync && cd android && .\\gradlew.bat installDebug"
+    "phone:deploy": "npm run build && npx cap sync && cd android && .\\gradlew.bat installDebug",
+    "prod:build": "npm run test && npm run build && npx cap sync && cd android && .\\gradlew.bat assembleRelease"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",
@@ -26,6 +28,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "vitest": "^4.1.10"
   }
 }
