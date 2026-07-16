@@ -131,6 +131,7 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
   return (
     <div style={styles.container}>
       <div style={styles.header}>
+        
         <button
           type="button" // Fixes mobile click tracking bubbles
           onClick={(e) => {
@@ -147,12 +148,12 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
       </div>
 
       {grade === 8 && (
-        <div style={styles.toggleRow}>
+        <div style={styles.toggleCard}>
           <span style={styles.toggleLabel}>🎹 Easy Mode (Root Chords Only)</span>
           <input
             type="checkbox"
             checked={easyMode}
-            disabled={isPlaying} // Lock settings when playing
+            disabled={isPlaying}
             onChange={(e) => setEasyMode(e.target.checked)}
             style={{
               ...styles.checkboxInput,
@@ -222,8 +223,9 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
               onClick={() => !hasChecked && !isPlaying && setSelectedCadence(opt)}
               style={{
                 ...styles.selectorBtn,
-                backgroundColor: selectedCadence === opt ? '#2563eb' : '#f3f4f6',
-                color: selectedCadence === opt ? '#ffffff' : '#1f2937',
+                // FIX: Falls back gracefully to CSS tokens instead of absolute light-only colors
+                backgroundColor: selectedCadence === opt ? '#2563eb' : 'var(--btn-selector)',
+                color: selectedCadence === opt ? '#ffffff' : 'var(--text-selector)',
                 opacity: isPlaying ? 0.4 : 1,
                 cursor: (hasChecked || isPlaying) ? 'not-allowed' : 'pointer'
               }}
@@ -297,40 +299,238 @@ export const CadenceQuiz: React.FC<CadenceQuizProps> = ({ grade, onBackToMenu })
     </div>
   );
 };
-const styles: Record<string, React.CSSProperties> = {
-  container: { padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  backBtn: { background: 'none', border: 'none', color: '#2563eb', fontSize: '16px', cursor: 'pointer' },
-  title: { fontSize: '18px', margin: 0, fontWeight: 'bold', color: '#111827' },
-  score: { fontSize: '14px', background: '#e5e7eb', color: '#1f2937', padding: '4px 8px', borderRadius: '4px' },
-  card: { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '16px', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' },
-  subtitle: { margin: '0 0 16px 0', fontSize: '16px', textAlign: 'center', color: '#1f2937' },
-  toggleRow: {
+const styles = {
+  container: {
     display: 'flex',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    background: '#fef3c7',
-    border: '1px solid #fde68a',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    marginBottom: '14px',
-    boxSizing: 'border-box',
-    width: '100%'
+    flexDirection: 'column' as const,
+    backgroundColor: 'var(--bg-main)',
+    minHeight: '100vh',
+    padding: '12px 14px', 
+    maxWidth: '460px', 
+    margin: '0 auto',
   },
-  toggleLabel: { fontSize: '14px', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' },
-  buttonGroup: { display: 'flex', gap: '12px', marginBottom: '16px' },
-
-  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#ffffff', color: '#1f2937', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
-  primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#059669', color: '#ffffff', fontSize: '14px', fontWeight: '500', cursor: 'pointer' },
-  individualPlaySection: { borderTop: '1px solid #f3f4f6', paddingTop: '12px' }, sectionLabel: { margin: '0 0 8px 0', fontSize: '13px', color: '#6b7280' },
-  row: { display: 'flex', gap: '8px' },
-  smallAudioBtn: { flex: 1, padding: '8px', borderRadius: '4px', border: '1px solid #d1d5db', background: '#f9fafb', color: '#374151', fontSize: '12px', cursor: 'pointer' },
-  inputTitle: { fontSize: '14px', margin: '0 0 10px 0', color: '#374151', fontWeight: '600' }, grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' },
-  selectorBtn: { padding: '12px', border: 'none', borderRadius: '6px', fontWeight: '500', fontSize: '14px', cursor: 'pointer' }, chordSelectorsRow: { display: 'flex', gap: '12px', marginBottom: '24px' },
-  chordCol: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }, chordLabel: { fontSize: '12px', color: '#6b7280' },
-  dropdown: { padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', fontSize: '14px', background: '#ffffff', color: '#1f2937' },
-  actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#2563eb', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },
-  nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#ffffff', fontWeight: '600', fontSize: '15px', cursor: 'pointer' },
-  feedbackBanner: { padding: '14px', borderRadius: '6px', fontSize: '14px', fontWeight: '500', lineHeight: '1.4', textAlign: 'center' }
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '14px', 
+    gap: '8px',
+    width: '100%',
+  },
+  backBtn: {
+    padding: '6px 12px', 
+    borderRadius: '16px',
+    border: '1px solid #cbd5e1', // Slightly darker border for crisp edges
+    backgroundColor: 'var(--bg-card)',
+    color: '#2563eb', 
+    fontWeight: '600',
+    fontSize: '13px',
+    cursor: 'pointer',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+  },
+  title: {
+    color: 'var(--text-main)',
+    fontSize: '18px', 
+    fontWeight: '800',
+    letterSpacing: '-0.025em',
+    margin: 0,
+    flex: 1, 
+    textAlign: 'center' as const,
+    lineHeight: '1.2',
+  },
+  score: {
+    padding: '4px 10px',
+    borderRadius: '6px',
+    backgroundColor: 'var(--btn-selector)', // FIX: Swapped hardcoded light gray out for a dynamic CSS token
+    color: 'var(--text-main)',               // FIX: Guarantees high-contrast typography in dark mode
+    fontWeight: '700',
+    fontSize: '12px',
+    border: '1px solid var(--border-element)', // Gives it a clean outline layout definition
+  },
+  toggleCard: {
+    backgroundColor: 'var(--bg-card)',
+    borderRadius: '10px',
+    padding: '12px 16px',
+    marginBottom: '12px',
+    border: '1px solid #cbd5e1', // Matches main panel depth lines
+    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  toggleLabel: {
+    fontSize: '13px',
+    fontWeight: '700', // Made text slightly bolder
+    color: 'var(--text-main)',
+  },
+  checkboxInput: {
+    width: '18px',
+    height: '18px',
+    cursor: 'pointer',
+  },
+  card: {
+    backgroundColor: 'var(--bg-card)',
+    borderRadius: '12px', 
+    padding: '16px', 
+    marginBottom: '12px', 
+    border: '1px solid #cbd5e1', // Darkened from var(--border-element) so panels look less faint
+    boxShadow: 'var(--card-shadow)', 
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px', 
+  },
+  subtitle: {
+    color: 'var(--text-muted)',
+    fontSize: '14px',
+    fontWeight: '700',
+    margin: '0 0 2px 0',
+  },
+  buttonGroup: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px',
+    width: '100%',
+  },
+  audioBtn: {
+    padding: '10px 12px', 
+    borderRadius: '10px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-main)',
+    fontWeight: '600',
+    fontSize: '13px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+  },
+  primaryAudioBtn: {
+    padding: '10px 12px', 
+    borderRadius: '10px',
+    border: 'none',
+    backgroundColor: '#059669', 
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer',
+    boxShadow: '0 2px 6px rgba(5, 150, 105, 0.15)',
+  },
+  individualPlaySection: {
+    marginTop: '2px',
+    borderTop: '1px solid var(--border-element)',
+    paddingTop: '10px',
+  },
+  sectionLabel: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: 'var(--text-muted)',
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.05em',
+    margin: '0 0 8px 0',
+  },
+  row: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr', 
+    gap: '6px',
+  },
+  smallAudioBtn: {
+    padding: '8px', 
+    borderRadius: '6px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: 'var(--btn-selector)',
+    color: 'var(--text-selector)',
+    fontSize: '12px',
+    fontWeight: '500',
+    cursor: 'pointer',
+  },
+  inputTitle: {
+    color: 'var(--text-main)',
+    fontSize: '14px',
+    fontWeight: '700',
+    margin: '0 0 4px 0',
+  },
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '8px',
+    marginBottom: '4px',
+  },
+  selectorBtn: {
+    padding: '10px 12px', 
+    borderRadius: '8px',
+    border: 'none',
+    fontWeight: '600',
+    fontSize: '14px',
+    cursor: 'pointer',
+    transition: 'all 0.1s ease',
+  },
+  chordSelectorsRow: {
+    display: 'grid',
+    // FIX: Uses repeat auto-fit to scale 2-in-a-row for G6/7 and instantly forces 3-in-a-row for G8!
+    gridTemplateColumns: 'repeat(auto-fit, minmax(0, 1fr))',
+    gap: '10px',
+    marginBottom: '4px',
+    width: '100%',
+  },
+  chordCol: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '4px',
+  },
+  chordLabel: {
+    fontSize: '11px',
+    fontWeight: '600',
+    color: 'var(--text-muted)',
+  },
+  dropdown: {
+    width: '100%',
+    padding: '8px 24px 8px 10px', // Adjusted right padding for chevron safety
+    borderRadius: '8px',
+    backgroundColor: 'var(--btn-selector)',
+    color: 'var(--text-main)',
+    border: '1px solid #cbd5e1',
+    fontSize: '14px',
+    fontWeight: '600',
+    appearance: 'none' as const,
+    backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://w3.org' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'right 8px center',
+    backgroundSize: '12px',
+  },
+  actionBtn: {
+    width: '100%',
+    padding: '12px', 
+    borderRadius: '10px',
+    border: 'none',
+    backgroundColor: '#2563eb', 
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '14px',
+    cursor: 'pointer',
+    marginTop: '6px',
+    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.15)',
+  },
+  nextBtn: {
+    width: '100%',
+    padding: '12px',
+    borderRadius: '10px',
+    border: 'none',
+    backgroundColor: '#0f172a',
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '14px',
+    cursor: 'pointer',
+    marginTop: '6px',
+  },
+  feedbackBanner: {
+    padding: '12px',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontWeight: '600',
+    marginTop: '10px',
+    lineHeight: '1.4',
+    textAlign: 'center' as const,
+  }
 };

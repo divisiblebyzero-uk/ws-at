@@ -36,7 +36,6 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToM
 
   const handlePlayFullPassage = async () => {
     if (!question) return;
-    // Triggers the real-time fluid chorale player!
     playAdvancedModulationPassage(question.passageNotes);
   };
 
@@ -60,13 +59,13 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToM
 
   const handleNextPhase = () => {
     if (grade === 7) {
-      loadNewQuestion(); // Grade 7 rule: Bypass minor start, cycle straight to next Major question
+      loadNewQuestion();
       return;
     }
     if (phase === 'majorStart') {
-      setPhase('minorStart'); // Step to part 2 of the syllabus requirements
+      setPhase('minorStart');
     } else {
-      setPhase('majorStart'); // Reset loop back to start
+      setPhase('majorStart');
     }
   };
 
@@ -111,8 +110,10 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToM
               onClick={() => !hasChecked && setSelectedGuess(opt)}
               style={{
                 ...styles.selectorBtn,
-                backgroundColor: selectedGuess === opt ? '#d97706' : '#f3f4f6',
-                color: selectedGuess === opt ? '#ffffff' : '#1f2937'
+                // FIX: Uses dynamic variable states to prevent blinding color sheets
+                backgroundColor: selectedGuess === opt ? '#d97706' : 'var(--btn-selector)',
+                color: selectedGuess === opt ? '#ffffff' : 'var(--text-selector)',
+                cursor: hasChecked ? 'not-allowed' : 'pointer'
               }}
               disabled={hasChecked}
             >
@@ -122,7 +123,15 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToM
         </div>
 
         {!hasChecked ? (
-          <button onClick={handleVerifyAnswer} disabled={!selectedGuess} style={styles.actionBtn}>
+          <button 
+            onClick={handleVerifyAnswer} 
+            disabled={!selectedGuess} 
+            style={{
+              ...styles.actionBtn,
+              opacity: !selectedGuess ? 0.4 : 1,
+              cursor: !selectedGuess ? 'not-allowed' : 'pointer'
+            }}
+          >
             Submit Destination Guess
           </button>
         ) : (
@@ -133,7 +142,11 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToM
       </div>
 
       {feedback && (
-        <div style={{ ...styles.feedbackBanner, backgroundColor: feedback.includes('Correct') ? '#def7ec' : '#fde8e8', color: feedback.includes('Correct') ? '#03543f' : '#9b1c1c' }}>
+        <div style={{
+          ...styles.feedbackBanner,
+          backgroundColor: feedback.includes('✅') ? '#def7ec' : '#fde8e8', 
+          color: feedback.includes('✅') ? '#03543f' : '#9b1c1c'
+        }}>
           {feedback}
         </div>
       )}
@@ -141,22 +154,158 @@ export const ModulationQuiz: React.FC<ModulationQuizProps> = ({ grade, onBackToM
   );
 };
 
-// Inline design overrides matching your high-contrast mobile dark-mode parameters
+// Slimmed down, cohesive cross-platform style tokens
 const styles: Record<string, React.CSSProperties> = {
-  container: { padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  backBtn: { background: 'none', border: 'none', color: '#2563eb', fontSize: '16px', cursor: 'pointer' },
-  title: { fontSize: '16px', margin: 0, fontWeight: 'bold' },
-  phaseBadge: { fontSize: '12px', background: '#f59e0b', color: '#fff', padding: '4px 8px', borderRadius: '4px', fontWeight: 'bold' },
-  card: { background: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '16px', marginBottom: '16px' },
-  subtitle: { margin: '0 0 16px 0', fontSize: '15px', textAlign: 'center', color: '#374151' },
-  buttonGroup: { display: 'flex', gap: '12px' },
-  audioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: '1px solid #d1d5db', background: '#fff', color: '#1f2937', fontWeight: '500', cursor: 'pointer' },
-  primaryAudioBtn: { flex: 1, padding: '12px', borderRadius: '6px', border: 'none', background: '#d97706', color: '#fff', fontWeight: '500', cursor: 'pointer' },
-  inputTitle: { fontSize: '14px', margin: '0 0 12px 0', color: '#374151', fontWeight: '600' },
-  grid: { display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' },
-  selectorBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', fontWeight: '600', fontSize: '14px', cursor: 'pointer', textAlign: 'left' },
-  actionBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#1f2937', color: '#fff', fontWeight: '600', cursor: 'pointer' },
-  nextBtn: { width: '100%', padding: '14px', border: 'none', borderRadius: '6px', background: '#059669', color: '#fff', fontWeight: '600', cursor: 'pointer' },
-  feedbackBanner: { padding: '14px', borderRadius: '6px', fontSize: '13px', fontWeight: '500', textAlign: 'center', lineHeight: '1.4' }
+  container: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    backgroundColor: 'var(--bg-main)',
+    minHeight: '100vh',
+    padding: '12px 14px', 
+    maxWidth: '460px', 
+    margin: '0 auto',
+  },
+  header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '14px', 
+    gap: '8px',
+    width: '100%',
+  },
+  backBtn: {
+    padding: '6px 12px', 
+    borderRadius: '16px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: 'var(--bg-card)',
+    color: '#2563eb', 
+    fontWeight: '600',
+    fontSize: '13px',
+    cursor: 'pointer',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+  },
+  title: {
+    color: 'var(--text-main)',
+    fontSize: '18px', 
+    fontWeight: '800',
+    letterSpacing: '-0.025em',
+    margin: 0,
+    flex: 1, 
+    textAlign: 'center' as const,
+    lineHeight: '1.2',
+  },
+  phaseBadge: {
+    padding: '4px 10px',
+    borderRadius: '6px',
+    backgroundColor: '#d97706', // Dedicated Modulation Amber accent tracking
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '12px',
+  },
+  card: {
+    backgroundColor: 'var(--bg-card)',
+    borderRadius: '12px', 
+    padding: '16px', 
+    marginBottom: '12px', 
+    border: '1px solid #cbd5e1', 
+    boxShadow: 'var(--card-shadow)', 
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px', 
+  },
+  subtitle: {
+    color: 'var(--text-main)',
+    fontSize: '14px',
+    fontWeight: '700',
+    margin: '0 0 2px 0',
+    textAlign: 'center' as const,
+  },
+  buttonGroup: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '10px',
+    width: '100%',
+  },
+  audioBtn: {
+    padding: '10px 12px', 
+    borderRadius: '10px',
+    border: '1px solid #cbd5e1',
+    backgroundColor: 'var(--bg-card)',
+    color: 'var(--text-main)',
+    fontWeight: '600',
+    fontSize: '13px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+  },
+  primaryAudioBtn: {
+    padding: '10px 12px', 
+    borderRadius: '10px',
+    border: 'none',
+    backgroundColor: '#d97706', // Dynamic module color grouping
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer',
+    boxShadow: '0 2px 6px rgba(217, 119, 6, 0.15)',
+  },
+  inputTitle: {
+    color: 'var(--text-main)',
+    fontSize: '14px',
+    fontWeight: '700',
+    margin: '0 0 4px 0',
+  },
+  grid: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    marginBottom: '4px',
+  },
+  selectorBtn: {
+    padding: '12px 14px', 
+    borderRadius: '8px',
+    border: 'none',
+    fontWeight: '600',
+    fontSize: '14px',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+    transition: 'all 0.1s ease',
+  },
+  actionBtn: {
+    width: '100%',
+    padding: '12px', 
+    borderRadius: '10px',
+    border: 'none',
+    backgroundColor: '#2563eb', 
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '14px',
+    cursor: 'pointer',
+    marginTop: '6px',
+    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.15)',
+  },
+  nextBtn: {
+    width: '100%',
+    padding: '12px',
+    borderRadius: '10px',
+    border: 'none',
+    backgroundColor: '#0f172a',
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: '14px',
+    cursor: 'pointer',
+    marginTop: '6px',
+  },
+  feedbackBanner: {
+    padding: '12px',
+    borderRadius: '10px',
+    fontSize: '14px',
+    fontWeight: '600',
+    marginTop: '10px',
+    lineHeight: '1.4',
+    textAlign: 'center' as const,
+  }
 };

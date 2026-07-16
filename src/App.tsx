@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from './hooks/useTheme';
 import { App as CapApp } from '@capacitor/app';
 import { CadenceQuiz } from './components/CadenceQuiz';
 import { ModulationQuiz } from './components/ModulationQuiz';
@@ -7,6 +8,7 @@ import { AudioSandbox } from './components/AudioSandbox';
 type ActiveView = 'grade-selector' | 'grade-dashboard' | 'cadences' | 'modulations' | 'sandbox';
 
 export const App: React.FC = () => {
+  useTheme(); 
   const [currentView, setCurrentView] = useState<ActiveView>('grade-selector');
   const [selectedGrade, setSelectedGrade] = useState<number>(8);
 
@@ -65,8 +67,10 @@ export const App: React.FC = () => {
                   onClick={() => handleSelectGrade(g)} 
                   style={{
                     ...styles.gradeCard,
-                    borderLeft: isReady ? '5px solid #2563eb' : '5px solid #d1d5db',
-                    backgroundColor: isReady ? '#ffffff' : '#f3f4f6'
+                    borderLeft: isReady ? '5px solid #2563eb' : '5px solid var(--border-element)',
+                    // FIX: Replaced hardcoded hex colors with dynamic theme tokens
+                    backgroundColor: isReady ? 'var(--bg-card)' : 'var(--btn-selector)',
+                    opacity: isReady ? 1 : 0.6 // Visually softens unreleased grades cleanly
                   }}
                 >
                   Grade {g} {isReady && <span style={styles.activeBadge}>Ready</span>}
@@ -157,24 +161,130 @@ export const App: React.FC = () => {
   );
 };
 
-// Paste your original styles mapping tree below this comment block intact
 const styles: Record<string, React.CSSProperties> = {
-  appShell: { backgroundColor: '#f9fafb', minHeight: '100vh', paddingBottom: '32px' },
-  container: { padding: '16px', maxWidth: '600px', margin: '0 auto', fontFamily: 'system-ui, sans-serif' },
-  heroSection: { textAlign: 'center', marginBottom: '24px', marginTop: '12px' },
-  mainTitle: { fontSize: '24px', fontWeight: '800', color: '#1f2937', margin: '0 0 4px 0' },
-  dashboardTitle: { fontSize: '20px', fontWeight: '800', color: '#1f2937', margin: '0 0 4px 0' },
-  subTitle: { fontSize: '13px', color: '#6b7280', margin: 0 },
-  gradeGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '20px' },
-  gradeCard: { padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '15px', fontWeight: '700', color: '#374151', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left' },
-  activeBadge: { fontSize: '10px', backgroundColor: '#dbeafe', color: '#1e40af', padding: '2px 6px', borderRadius: '4px' },
-  navigationHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
-  backLink: { background: 'none', border: 'none', color: '#2563eb', fontSize: '14px', fontWeight: '600', cursor: 'pointer', padding: 0 },
-  pillBadge: { fontSize: '12px', backgroundColor: '#e0f2fe', color: '#0369a1', padding: '4px 10px', borderRadius: '9999px', fontWeight: '700' },
-  menuGrid: { display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' },
-  menuCard: { display: 'flex', gap: '14px', padding: '16px', borderRadius: '8px', border: '1px solid #e5e7eb', backgroundColor: '#ffffff', textAlign: 'left', cursor: 'pointer', width: '100%', boxSizing: 'border-box' },
-  cardIcon: { fontSize: '24px', display: 'flex', alignItems: 'center' },
-  cardContent: { display: 'flex', flexDirection: 'column', gap: '2px' },
-  cardTitle: { fontSize: '15px', fontWeight: '700', color: '#1f2937', margin: 0 },
-  cardDesc: { fontSize: '12px', color: '#6b7280', margin: 0, lineHeight: '1.4' }
+  appShell: { 
+    backgroundColor: 'var(--bg-main)', // Dynamic frame canvas matching property
+    minHeight: '100vh', 
+    paddingBottom: '32px' 
+  },
+  container: { 
+    padding: '16px', 
+    maxWidth: '600px', 
+    margin: '0 auto', 
+    fontFamily: 'system-ui, sans-serif' 
+  },
+  heroSection: { 
+    textAlign: 'center' as const, 
+    marginBottom: '24px', 
+    marginTop: '12px' 
+  },
+  mainTitle: { 
+    fontSize: '24px', 
+    fontWeight: '800', 
+    color: 'var(--text-main)', // High-contrast title tracking 
+    margin: '0 0 4px 0' 
+  },
+  dashboardTitle: { 
+    fontSize: '20px', 
+    fontWeight: '800', 
+    color: 'var(--text-main)', 
+    margin: '0 0 4px 0' 
+  },
+  subTitle: { 
+    fontSize: '13px', 
+    color: 'var(--text-muted)', // Adaptive soft subtitle gray
+    margin: 0 
+  },
+  gradeGrid: { 
+    display: 'grid', 
+    gridTemplateColumns: '1fr 1fr', 
+    gap: '12px', 
+    marginTop: '20px' 
+  },
+  gradeCard: { 
+    padding: '16px', 
+    borderRadius: '8px', 
+    border: '1px solid var(--border-element)', // Crisp adaptive borders
+    backgroundColor: 'var(--bg-card)',          // Panel transforms to dark seamlessly
+    fontSize: '15px', 
+    fontWeight: '700', 
+    color: 'var(--text-main)', 
+    cursor: 'pointer', 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    textAlign: 'left' as const 
+  },
+  activeBadge: { 
+    fontSize: '10px', 
+    backgroundColor: 'var(--btn-selector)', // Adaptive tone selector backing profile
+    color: '#2563eb',                       // Clear consistent blue text identifier
+    padding: '2px 6px', 
+    borderRadius: '4px' 
+  },
+  navigationHeader: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: '16px' 
+  },
+  backLink: { 
+    background: 'none', 
+    border: 'none', 
+    color: '#2563eb', 
+    fontSize: '14px', 
+    fontWeight: '600', 
+    cursor: 'pointer', 
+    padding: 0 
+  },
+  pillBadge: { 
+    fontSize: '12px', 
+    backgroundColor: 'var(--btn-selector)', 
+    color: 'var(--text-main)', 
+    padding: '4px 10px', 
+    borderRadius: '9999px', 
+    fontWeight: '700' 
+  },
+  menuGrid: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: '14px', 
+    marginTop: '12px' 
+  },
+  menuCard: { 
+    display: 'flex', 
+    gap: '14px', 
+    padding: '16px', 
+    borderRadius: '8px', 
+    border: '1px solid var(--border-element)', 
+    backgroundColor: 'var(--bg-card)', // Flips card dark cleanly
+    textAlign: 'left' as const, 
+    cursor: 'pointer', 
+    width: '100%', 
+    boxSizing: 'border-box',
+    boxShadow: 'var(--card-shadow)'     // Ambient soft shadows adapt to background contrast
+  },
+  cardIcon: { 
+    fontSize: '24px', 
+    display: 'flex', 
+    alignItems: 'center' 
+  },
+  cardContent: { 
+    display: 'flex', 
+    flexDirection: 'column', 
+    gap: '2px' 
+  },
+  cardTitle: { 
+    fontSize: '15px', 
+    fontWeight: '700', 
+    color: 'var(--text-main)', 
+    margin: 0 
+  },
+  cardDesc: { 
+    fontSize: '12px', 
+    color: 'var(--text-muted)', 
+    margin: 0, 
+    lineHeight: '1.4' 
+  }
 };
+
